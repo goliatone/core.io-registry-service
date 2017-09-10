@@ -10,12 +10,19 @@ Application instances register with the service when they boot, and optionally t
 The registry exposes an API for instances to register. It also provides a way to retrieve a list of the registered applications.
 
 
-* `POST /api/register`
-* `POST /api/register/jobs`
+Registration API:
 
-* `GET /api/applications`
-* `GET /api/applications/jobs`
-* `GET /api/jobs`
+* `POST /api/registry/enter`
+* `POST /api/registry/exit`
+
+
+* `GET  /api/application`
+
+* `GET  /api/application/:id/jobs`
+
+* `POST /api/job`
+* `GET  /api/job`
+* `GET  /api/job/:id`
 
 ##### register
 
@@ -24,6 +31,7 @@ A sample registration payload:
 ```json
 {
     "appId": "my-app",
+    "hostname": "goliatodromo.local",
     "data": {
         "repl": {
             "port": 8989
