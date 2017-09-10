@@ -23,6 +23,7 @@ var Node = BaseModel.extend({
             type:'string',
             index: true
         },
+        hostname: 'string',
         jobs: {
             collection: 'job',
             via: 'application'
@@ -30,6 +31,9 @@ var Node = BaseModel.extend({
         data: 'json',
         description: 'string',
         label: 'string'
+    },
+    createFromPayload: function(payload){
+        
     }
 });
 
