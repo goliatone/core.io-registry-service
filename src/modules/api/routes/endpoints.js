@@ -30,7 +30,7 @@ function initialize(router, config){
 
     const Job = context.models.Job;
     const Application = context.models.Application;
-    
+
     /**
      * GET home page.
      */
@@ -46,34 +46,40 @@ function initialize(router, config){
      * sent back as a response. Which should be
      * used to de-register it.
      */
-    router.post('/registry/enter', function registrerHandler(req, res){
-        res.send({
-            status: true
-        });
+    router.post('/registry/enter', function registrerHandler(req, res, next){
+        let body = req.body;
+
+        Application.createFromPayload(body).then((result)=>{
+            res.send({
+                status: true,
+                value: result
+            });
+        }).catch(next);
+
     });
 
-    router.post('/registry/exit', function registrerHandler(req, res){
+    router.post('/registry/exit', function registrerHandler(req, res, next){
         let appId = req.body.appId;
         Application.findOne({appId}).then((result)=>{
             res.send({
                 status: true
             });
-        });
+        }).catch(next);
     });
 
     /**
      * List registered applications.
      */
-    router.get('/application', function jobHandler(req, res) {
+    router.get('/application', function jobHandler(req, res, next) {
         Application.find().then((result)=>{
             res.send({
                 status: true,
                 value: result
             });
-        });
+        }).catch(next);
     });
 
-    router.get('/application/:id/jobs', function appJobListHandler(req, res){
+    router.get('/application/:id/jobs', function appJobListHandler(req, res, next){
         let appId = req.param.id;
 
         Application.findOne({appId}).populate('jobs').then((result)=>{
@@ -81,30 +87,28 @@ function initialize(router, config){
                 status: true,
                 value: result
             });
-        });
+        }).catch(next);
     });
 
-    router.post('/job', function jobCreateHandler(req, res) {
+    router.post('/job', function jobCreateHandler(req, res, next) {
         res.send({
             status: true
         });
     });
 
-    router.get('/job', function jobListHandler(req, res){
+    router.get('/job', function jobListHandler(req, res, next){
         res.send({
             status: true
         });
     });
 
-    router.get('/job/:id', function jobDetailHandler(req, res) {
+    router.get('/job/:id', function jobDetailHandler(req, res, next) {
         Job.findOne(req.param.id).then((result)=>{
             res.send({
                 status: true
             });
         });
     });
-
-
 
     return router;
 }
