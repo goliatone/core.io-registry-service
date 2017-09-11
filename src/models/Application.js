@@ -1,8 +1,12 @@
 'use strict';
 
-var BaseModel = require('core.io-persistence').BaseModel;
+const BaseModel = require('core.io-persistence').BaseModel;
 
-var Node = BaseModel.extend({
+/*
+ * We should have a model for an Application
+ * and then have a separate AppSession model.
+ */
+let Node = BaseModel.extend({
     identity: 'application',
     exportName: 'Application',
     connection: 'development',
@@ -15,25 +19,51 @@ var Node = BaseModel.extend({
                 return BaseModel.uuid();
             }
         },
-        online: {
-            type: 'boolean',
-            defaultsTo: false
-        },
         appId: {
             type:'string',
             index: true
         },
         hostname: 'string',
+        environment: {
+            type: 'string'
+        },
+
+        online: {
+            type: 'boolean',
+            defaultsTo: false
+        },
+
         jobs: {
             collection: 'job',
             via: 'application'
         },
+
         data: 'json',
+
+        label: 'string',
         description: 'string',
-        label: 'string'
     },
-    createFromPayload: function(payload){
-        
+    createFromPayload: function(payload) {
+        let attrs = ['appId', 'hostname', 'environment'];
+
+        let criteria = {
+            online: true
+        };
+
+        attrs.forEach((attr)=>{
+            criteria[attr] = payload[attr];
+        });
+
+        Object.keys(payload).forEach((key)=>{
+            if(attrs.includes(key)) return;
+
+            if(!criteria.data) {
+                criteria.data = {};
+            }
+            criteria.data[key] = payload[key];
+        });
+
+        return this.create(criteria);
     }
 });
 
