@@ -1,0 +1,15 @@
+[development]
+NODE_APP_PORT=3003
+NODE_REPL_PORT=8989
+
+NODE_APP_ID=registry-service
+
+NODE_REPL_ENABLED=true
+
+[production]
+NODE_APP_PORT=3003
+NODE_REPL_PORT=8989
+
+NODE_APP_ID=registry-service
+
+NODE_REPL_ENABLED=true
