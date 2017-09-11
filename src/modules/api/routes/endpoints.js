@@ -36,7 +36,7 @@ function initialize(router, config){
      */
     router.get('/health', function healthHandler(req, res, next) {
         res.send({
-            status: true
+            success: true
         });
     });
 
@@ -46,23 +46,30 @@ function initialize(router, config){
      * sent back as a response. Which should be
      * used to de-register it.
      */
-    router.post('/registry/enter', function registrerHandler(req, res, next){
+    router.post('/register', function registrerHandler(req, res, next){
         let body = req.body;
 
-        Application.createFromPayload(body).then((result)=>{
+        logger.info('POST /register %j', body);
+
+        Application.createFromPayload(body).then((result={uuid:null})=>{
             res.send({
-                status: true,
-                value: result
+                success: true,
+                value: {
+                    identifier: result.uuid
+                }
             });
         }).catch(next);
 
     });
 
-    router.post('/registry/exit', function registrerHandler(req, res, next){
-        let appId = req.body.appId;
-        Application.findOne({appId}).then((result)=>{
+    router.post('/unregister', function registrerHandler(req, res, next){
+        let identifier = req.body.identifier;
+
+        logger.info('POST /unregister %j', identifier);
+
+        Application.update({uuid: identifier}, {online: false}).then((result)=>{
             res.send({
-                status: true
+                success: true
             });
         }).catch(next);
     });
@@ -73,7 +80,7 @@ function initialize(router, config){
     router.get('/application', function jobHandler(req, res, next) {
         Application.find().then((result)=>{
             res.send({
-                status: true,
+                success: true,
                 value: result
             });
         }).catch(next);
@@ -84,7 +91,7 @@ function initialize(router, config){
 
         Application.findOne({appId}).populate('jobs').then((result)=>{
             res.send({
-                status: true,
+                success: true,
                 value: result
             });
         }).catch(next);
@@ -92,20 +99,20 @@ function initialize(router, config){
 
     router.post('/job', function jobCreateHandler(req, res, next) {
         res.send({
-            status: true
+            success: true
         });
     });
 
     router.get('/job', function jobListHandler(req, res, next){
         res.send({
-            status: true
+            success: true
         });
     });
 
     router.get('/job/:id', function jobDetailHandler(req, res, next) {
         Job.findOne(req.param.id).then((result)=>{
             res.send({
-                status: true
+                success: true
             });
         });
     });
