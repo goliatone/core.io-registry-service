@@ -12,9 +12,8 @@ The registry exposes an API for instances to register. It also provides a way to
 
 Registration API:
 
-* `POST /api/registry/enter`
-* `POST /api/registry/exit`
-
+* `POST /api/register`
+* `POST /api/unregister`
 
 * `GET  /api/application`
 
@@ -49,6 +48,10 @@ A sample registration payload:
     }
 }
 ```
+
+##### unregister
+
+#### Application vs Session
 
 #### Jobs
 
