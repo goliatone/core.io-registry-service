@@ -59,6 +59,10 @@ A sample registration payload:
 Default job that will check if the application is up. There are different strategies available like HTTP, MQTT, etc.
 
 
+### Future Functionality
+Error reporting, if the server is closing due to an error, it should include it in the payload, that way we can track and keep a list of errors.
+
+
 https://www.npmjs.com/package/electron-mac-notifier
 
 ## License
