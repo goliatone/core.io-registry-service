@@ -103,9 +103,12 @@ function initialize(router, config){
     });
 
     router.get('/job', function jobListHandler(req, res, next){
-        res.send({
-            success: true
-        });
+        Job.find().populate('application').then((result)=>{
+            res.send({
+                success: true,
+                value: result
+            });
+        }).catch(next);
     });
 
     router.get('/job/:id', function jobDetailHandler(req, res, next) {
