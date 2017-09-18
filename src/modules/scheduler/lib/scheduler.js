@@ -31,3 +31,5 @@ class Scheduler extends EventEmitter {
         return this.strategy.boot();
     }
 }
+
+module.exports = Scheduler;
