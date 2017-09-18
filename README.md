@@ -49,6 +49,9 @@ A sample registration payload:
 }
 ```
 
+After a new application instance is created a default job is assigned to it.
+
+
 ##### unregister
 
 #### Application vs Session
