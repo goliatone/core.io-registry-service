@@ -44,7 +44,11 @@ let Node = BaseModel.extend({
         description: 'string',
     },
     createFromPayload: function(payload) {
-        let attrs = ['appId', 'hostname', 'environment'];
+        let attrs = [
+            'appId',
+            'hostname',
+            'environment'
+        ];
 
         let criteria = {
             online: true

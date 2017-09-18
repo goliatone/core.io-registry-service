@@ -59,7 +59,6 @@ function initialize(router, config){
                 }
             });
         }).catch(next);
-
     });
 
     router.post('/unregister', function registrerHandler(req, res, next){
