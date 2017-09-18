@@ -5,6 +5,8 @@ const Scheduler = require('./lib/scheduler');
 /**
  * https://bunkat.github.io/later/
  * http://bunkat.github.io/schedule/
+ * https://www.npmjs.com/package/node-schedule
+ * 
  * Intialization routing. Here we expose
  * our scheduler Service to be available
  * through the app.
