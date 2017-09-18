@@ -38,7 +38,7 @@ var Node = BaseModel.extend({
         }
 
         if(!options.interval) {
-            options.interval = (5 * 60 * 1000);
+            options.interval = (0.5 * 60 * 1000);
         }
 
         return this.create({
