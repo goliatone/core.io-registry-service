@@ -3,8 +3,28 @@
 const BaseModel = require('core.io-persistence').BaseModel;
 
 /*
- * We should have a model for an Application
+ * TODO: We should have a model for an Application
  * and then have a separate AppSession model.
+ *
+ * Possibly break this into Application and
+ * ApplicationInstance.
+ *
+ * Need to find a way to get a unique identifier
+ * for each instance, so that we don't create
+ * multiple instances.
+ *
+ * If we run multiple instances of the same
+ * app on a single machine they must have a
+ * different port (?)
+ *
+ * If we run an application in different machines
+ * but same port.
+ *
+ * If we change the environment should it be a
+ * different instance?
+ * appId + machine + port
+ *
+ *
  */
 let Node = BaseModel.extend({
     identity: 'application',
@@ -40,6 +60,9 @@ let Node = BaseModel.extend({
 
         data: 'json',
 
+        healthUrl: 'string',
+        healthInterval: 'integer',
+
         label: 'string',
         description: 'string',
     },
@@ -67,7 +90,19 @@ let Node = BaseModel.extend({
             criteria.data[key] = payload[key];
         });
 
-        return this.create(criteria);
+        payload.health = {
+            url: 'http://localhost:7331/health'
+        }
+
+        return this.create(criteria).then((record)=>{
+            if(payload.health) {
+                return Job.createDefaultFor(record.id, payload.health).then(()=>{
+                    return record;
+                });
+            }
+            return record;
+
+        });
     }
 });
 
