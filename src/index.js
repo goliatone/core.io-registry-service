@@ -18,17 +18,3 @@ let app = new Application({
 app.once('modules.ready', () => {
     app.run();
 });
-
-app.on('persistence.application.*', (e) => {
-    let {identity, action, record, type} = e;
-
-    app.logger.info('persistence:', type, identity, action);
-
-    let topic = 'ww/registry/application/update';
-
-    app.pubsub.publish(topic, {
-        topic,
-        action,
-        record
-    });
-});
