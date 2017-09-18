@@ -63,7 +63,15 @@ Default job that will check if the application is up. There are different strate
 Error reporting, if the server is closing due to an error, it should include it in the payload, that way we can track and keep a list of errors.
 
 
+Application - has-many -* Instance
+
 https://www.npmjs.com/package/electron-mac-notifier
 
 ## License
-® License MIT by goliatone
+® License MIT 2017 by goliatone
+
+
+<!--
+https://github.com/Bertrand31/Monitaure
+https://github.com/stefanbc/uptimey
+-->
