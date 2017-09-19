@@ -25,6 +25,14 @@ var Node = BaseModel.extend({
             model: 'application'
         },
         interval: 'integer',
+        /*
+         * Time after which an OK check
+         * will be considered unresponsive.
+         */
+        maxTime: {
+            type: 'integer',
+            defaultsTo: 30 * 1000
+        },
         endpoint: 'string',
         name: 'string',
         description: 'string',
