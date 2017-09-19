@@ -14,10 +14,22 @@ function SchedulePingCommand(event){
     let command = commandImplementation(type);
 
     let check = Check.initializeEmpty(record);
+    let start = Date.now();
+    check.createdAt = new Date(start);
 
     command.call(context, event).then((response)=>{
+        check.isUp = true;
+
+        if (record.maxTime) {
+            let time = Date.now() - start;
+            check.isResponsive = time < record.maxTime;
+        } else {
+            check.isResponsive = false;
+        }
+
         return Check.create(check);
     }).catch((err)=>{
+        check.isUp = false;
         check.error = err;
         return Check.create(check);
     }).then(console.log);
