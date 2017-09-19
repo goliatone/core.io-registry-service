@@ -4,7 +4,13 @@ const extend = require('gextend');
 const EventEmitter = require('events');
 const DEFAULTS = require('./defaults');
 
-
+/**
+ * https://github.com/redibox/job
+ * https://github.com/redibox/schedule
+ *
+ * https://www.npmjs.com/package/redis-scheduler
+ * @constructor
+ */
 class Scheduler extends EventEmitter {
     constructor(config){
         super();
@@ -18,6 +24,15 @@ class Scheduler extends EventEmitter {
         extend(this, config);
         let Strategy = this.strategyMap[this.strategy];
         this.strategy = new Strategy(this, this.options);
+    }
+
+    tick(event={}){
+        event = this.buildEvent(event);
+        this.emit('schedule.event');
+    }
+
+    buildEvent(event={}){
+
     }
 
     /**
