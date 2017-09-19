@@ -23,6 +23,8 @@
     "core.io-express-server": "*",
     "core.io-persistence": "*",
     "core.io-pubsub-mqtt": "*",
+    "request": "^2.81.0",
+    "request-promise": "^4.2.1",
     "sails-disk": "*"
   },
   "devDependencies": {
