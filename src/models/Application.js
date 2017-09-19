@@ -89,9 +89,13 @@ let Node = BaseModel.extend({
             }
             criteria.data[key] = payload[key];
         });
-
+        //TODO: REMOVE!!!
+        //DEBUG DEVELOPMENT
+        console.warn('-------------- DEVELOPMENT ---------');
+        console.warn('REMOVE THIS!!!!');
+        console.warn('WE CREATED A DUMMY URL');
         payload.health = {
-            url: 'http://localhost:7331/health'
+            url: 'http://localhost:7331/api/health'
         }
 
         return this.create(criteria).then((record)=>{
