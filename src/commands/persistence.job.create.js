@@ -1,5 +1,16 @@
 'use strict';
 
+/**
+ * After a Job has been created this
+ * command will schedule it's execution.
+ *
+ * Then, the schedule will load the job
+ * description on every tick, execute
+ * the correspoding command- e.j Ping-
+ * and update the Job record.
+ *
+ * @param       {Object} event
+ */
 function JobCreatedCommand(event){
     let context = event.context;
     let logger = context.getLogger('cmd');
@@ -8,10 +19,14 @@ function JobCreatedCommand(event){
 
     logger.info('JobCreatedCommand', record);
 
+    /*
+     * This simulates the Scheduler's purpose:
+     * 
+     */
     let interval = record.interval;
 
-    setInterval(()=>{
-        console.log('ping ', record.endpoint);
+    setInterval(() => {
+        context.emit('schedule.ping', {record});
     }, interval);
 }
 
