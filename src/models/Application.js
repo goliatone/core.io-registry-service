@@ -39,6 +39,10 @@ let Node = BaseModel.extend({
                 return BaseModel.uuid();
             }
         },
+        identifier: {
+            type: 'text',
+            unique: true,
+        },
         appId: {
             type:'string',
             index: true
@@ -70,35 +74,37 @@ let Node = BaseModel.extend({
         let attrs = [
             'appId',
             'hostname',
+            'identifier',
             'environment'
         ];
 
-        let criteria = {
+        let values = {
             online: true
         };
 
         attrs.forEach((attr)=>{
-            criteria[attr] = payload[attr];
+            values[attr] = payload[attr];
         });
 
         Object.keys(payload).forEach((key)=>{
             if(attrs.includes(key)) return;
 
-            if(!criteria.data) {
-                criteria.data = {};
+            if(!values.data) {
+                values.data = {};
             }
-            criteria.data[key] = payload[key];
+            values.data[key] = payload[key];
         });
-        //TODO: REMOVE!!!
-        //DEBUG DEVELOPMENT
-        console.warn('-------------- DEVELOPMENT ---------');
-        console.warn('REMOVE THIS!!!!');
-        console.warn('WE CREATED A DUMMY URL');
-        payload.health = {
-            url: 'http://localhost:7331/api/health'
+
+        let criteria = {};
+
+        if(values.identifier) {
+            criteria.identifier = payload.identifier;
+        } else {
+            values.identifier =
+            criteria.identifier = payload.appId + '@' + payload.hostname;
         }
 
-        return this.create(criteria).then((record)=>{
+        return this.updateOrCreate(criteria, values).then((record)=>{
             if(payload.health) {
                 return Job.createDefaultFor(record.id, payload.health).then(()=>{
                     return record;
