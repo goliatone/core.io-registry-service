@@ -2,20 +2,35 @@
 
 
 function ApplicationCreatedCommand(event){
-    let context = event.context;
-    let logger = context.getLogger('cmd');
+    const context = event.context;
+    const logger = context.getLogger('cmd');
+    const StatusEvent = context.models.StatusEvent;
 
     let {identity, action, record, type} = event;
 
-    logger.info('ApplicationCreatedCommand:', type, identity, action);
-    logger.info('ApplicationCreatedCommand:', event.record);
+    let application = record;
 
-    let topic = 'ww/registry/application/update';
+    logger.info('ApplicationCreatedCommand:', type, identity, action);
+    logger.info('ApplicationCreatedCommand:', application);
+
+    const topic = 'ww/registry/application/update';
+    const online = application.online;
+
+    let notice = {
+        application: application.id,
+        // tags: job.tags,
+        label: online ? 'register' : 'unregister',
+        description: `Application ${application.appId} is now ${online ? 'online' : 'offline'}`
+    };
 
     context.pubsub.publish(topic, {
         topic,
         action,
-        record
+        application
+    });
+
+    return StatusEvent.create(notice).then(()=>{
+        console.log('created status event...');
     });
 }
 

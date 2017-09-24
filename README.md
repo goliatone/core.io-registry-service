@@ -70,6 +70,9 @@ Application - has-many -* Instance
 
 https://www.npmjs.com/package/electron-mac-notifier
 
+### TODO
+- [ ] Generate an app identifier that is reproducible (hostname + appId)
+
 ## License
 ® License MIT 2017 by goliatone
 
@@ -77,4 +80,5 @@ https://www.npmjs.com/package/electron-mac-notifier
 <!--
 https://github.com/Bertrand31/Monitaure
 https://github.com/stefanbc/uptimey
+https://github.com/qawemlilo/node-monitor
 -->
