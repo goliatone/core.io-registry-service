@@ -15,10 +15,6 @@ var Node = BaseModel.extend({
                 return BaseModel.uuid();
             }
         },
-        timestamp: {
-            type: 'integer',
-            defaultsTo: Date.now
-        },
         /*
          * false if ping returned a non-OK
          * status code or timed out
@@ -36,28 +32,68 @@ var Node = BaseModel.extend({
             defaultsTo: false
         },
 
-        time: 'number',
+        responseTime: {
+            type: 'integer'
+        },
+        requestTime: {
+            type: 'integer',
+            defaultsTo: Date.now
+        },
+        /*
+         * This only makes sense in
+         * HTTP context.
+         */
+        statusCode: {
+            type: 'integer'
+        },
         job: {
             model: 'job'
         },
         tags: 'array',
-        /*
-         * time since last ping if the
-         * ping is down
-         */
-        downtime: 'number',
         error: 'string',
         //TODO: This should be session
-        application: {
-            model: 'application'
-        },
         endpoint: 'string',
     },
-    initializeEmpty: function(record){
+    start: function(record){
         return {
-            timestamp: Date.now(),
-            record: record.id
+            requestTime: Date.now(),
+            job: record.id,
+            timeoutAfter: record.timeoutAfter
         };
+    },
+    commit: function(err, record){
+        if(err) return this.commitKo(err, record);
+
+        /*
+         * This should be optional.
+         * Perhaps make the check outside
+         * and use the job info to know
+         * if it has to fail on bogus
+         * status codes.
+         */
+        if(record.statusCode && record.statusCode >= 400){
+            return this.commitKo(new Error('Invalid response type'), record);
+        }
+
+        return this.commitOk(record);
+    },
+    commitKo: function(err, record){
+        record.isUp = false;
+        record.responseTime = Date.now() - record.requestTime;
+        record.isResponsive = false;
+        record.error = err.toString();
+        return this.create(record);
+    },
+    commitOk: function(record){
+        record.isUp = true;
+        record.responseTime = Date.now() - record.requestTime;
+        record.isResponsive = true;
+
+        if(record.timeoutAfter){
+            record.isResponsive = record.responseTime < record.timeoutAfter;
+        }
+
+        return this.create(record);
     }
 });
 
