@@ -13,25 +13,14 @@ function SchedulePingCommand(event){
     let type = getTypeFromEndpoint(record.endpoint);
     let command = commandImplementation(type);
 
-    let check = Check.initializeEmpty(record);
-    let start = Date.now();
-    check.createdAt = new Date(start);
+    let check = Check.start(record);
 
-    command.call(context, event).then((response)=>{
-        check.isUp = true;
-
-        if (record.maxTime) {
-            let time = Date.now() - start;
-            check.isResponsive = time < record.maxTime;
-        } else {
-            check.isResponsive = false;
-        }
-
-        return Check.create(check);
+    command.call(context, event).then((response) => {
+        console.log('response', response.statusCode);
+        check.statusCode = response.statusCode;
+        return Check.commit(null, check);
     }).catch((err)=>{
-        check.isUp = false;
-        check.error = err;
-        return Check.create(check);
+        return Check.commitKo(err, check);
     }).then(console.log);
 }
 
