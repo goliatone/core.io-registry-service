@@ -29,6 +29,8 @@ function initialize(router, config){
     const logger = context.getLogger('endpoints');
 
     const Job = context.models.Job;
+    const Check = context.models.Check;
+    const StatusEvent = context.models.StatusEvent;
     const Application = context.models.Application;
 
     /**
@@ -51,22 +53,29 @@ function initialize(router, config){
 
         logger.info('POST /register %j', body);
 
-        Application.createFromPayload(body).then((result={uuid:null})=>{
+        Application.createFromPayload(body).then((result={identifier:null})=>{
+            logger.info('registered app with identifier %s', result.identifier);
             res.send({
                 success: true,
                 value: {
-                    identifier: result.uuid
+                    identifier: result.identifier
                 }
             });
         }).catch(next);
     });
 
+    /**
+     * Un-register an application.
+     * This should be called by an application
+     * after it first registerd.
+     */
     router.post('/unregister', function registrerHandler(req, res, next){
         let identifier = req.body.identifier;
 
-        logger.info('POST /unregister %j', identifier);
-
-        Application.update({uuid: identifier}, {online: false}).then((result)=>{
+        logger.info('POST /unregister %j', identifier, req.originalUrl);
+        //TODO: if no identifier provided, we should try to use
+        //originalUrl instead.
+        Application.update({identifier: identifier}, {online: false}).then((result)=>{
             res.send({
                 success: true
             });
@@ -86,7 +95,7 @@ function initialize(router, config){
     });
 
     router.get('/application/:id/jobs', function appJobListHandler(req, res, next){
-        let appId = req.param.id;
+        let appId = req.params.id;
 
         Application.findOne({appId}).populate('jobs').then((result)=>{
             res.send({
@@ -112,9 +121,46 @@ function initialize(router, config){
     });
 
     router.get('/job/:id', function jobDetailHandler(req, res, next) {
-        Job.findOne(req.param.id).then((result)=>{
+        Job.findOne(req.params.id).then((result)=>{
             res.send({
-                success: true
+                success: true,
+                value: result
+            });
+        });
+    });
+
+    router.get('/job/:id/checks', function jobCheckHandler(req, res, next) {
+        Check.find({job:req.params.id}).then((result)=>{
+            res.send({
+                success: true,
+                value: result
+            });
+        });
+    });
+
+    router.get('/job/:id/checks/count', function jobCheckCountHandler(req, res, next) {
+        Check.count({job:req.params.id}).then((result)=>{
+            res.send({
+                success: true,
+                value: result
+            });
+        });
+    });
+
+    router.get('/job/:id/events', function jobStatusEventHandler(req, res, next) {
+        StatusEvent.find({job:req.params.id}).then((result)=>{
+            res.send({
+                success: true,
+                value: result
+            });
+        });
+    });
+
+    router.get('/event', function jobStatusEventHandler(req, res, next) {
+        StatusEvent.find().then((result)=>{
+            res.send({
+                success: true,
+                value: result
             });
         });
     });
