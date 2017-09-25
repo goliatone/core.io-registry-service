@@ -72,6 +72,9 @@ https://www.npmjs.com/package/electron-mac-notifier
 
 ### TODO
 - [ ] Generate an app identifier that is reproducible (hostname + appId)
+- [ ] Implement scheduler
+- [ ] Implement background jobs
+- [ ] Implement stats
 
 ## License
 ® License MIT 2017 by goliatone
