@@ -1,8 +1,8 @@
 'use strict';
 
-var BaseModel = require('core.io-persistence').BaseModel;
+const BaseModel = require('core.io-persistence').BaseModel;
 
-var Node = BaseModel.extend({
+let Node = BaseModel.extend({
     identity: 'job',
     exportName: 'Job',
     connection: 'development',
