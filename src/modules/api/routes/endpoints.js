@@ -96,8 +96,7 @@ function initialize(router, config){
 
     router.get('/application/:id/jobs', function appJobListHandler(req, res, next){
         let appId = req.params.id;
-
-        Application.findOne({appId}).populate('jobs').then((result)=>{
+        Job.findOne({application:appId}).then((result)=>{
             res.send({
                 success: true,
                 value: result
