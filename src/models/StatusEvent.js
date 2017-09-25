@@ -1,6 +1,7 @@
 'use strict';
 
 const BaseModel = require('core.io-persistence').BaseModel;
+const MAX_AGE_3_MONTHS = 3 * 31 * 24 * 60 * 60 * 1000;
 
 let Node = BaseModel.extend({
     identity: 'statusevent',
@@ -27,7 +28,14 @@ let Node = BaseModel.extend({
         label: 'string',
         description: 'string',
     },
-
+    purge: function(maxAge=MAX_AGE_3_MONTHS) {
+        const oldestDateToKeep = new Date(Date.now() - maxAge);
+        return this.destroy({
+            createdAt: {
+                '<': oldestDateToKeep
+            }
+        });
+    }
 });
 
 module.exports = Node;
