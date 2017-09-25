@@ -18,8 +18,12 @@ module.exports = {
             let context = this;
             let Application = context.models.Application;
             Application.find().then((result)=> {
-                console.log('send result to ', event.response, result);
-                context.pubsub.publish(event.response, {result});
+                console.log('send result to ', event.respondTo, result);
+                if(event.response){
+                    console.log('sending response...');
+                    event.response({result});
+                }
+                // context.pubsub.publish(event.respondTo, {result});
             }).catch(console.error);
         },
     }
