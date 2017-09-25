@@ -1,8 +1,9 @@
 'use strict';
 
-var BaseModel = require('core.io-persistence').BaseModel;
+const BaseModel = require('core.io-persistence').BaseModel;
+const MAX_AGE_3_MONTHS = 3 * 31 * 24 * 60 * 60 * 1000;
 
-var Node = BaseModel.extend({
+let Node = BaseModel.extend({
     identity: 'check',
     exportName: 'Check',
     connection: 'development',
@@ -94,6 +95,14 @@ var Node = BaseModel.extend({
         }
 
         return this.create(record);
+    },
+    purge: function(maxAge=MAX_AGE_3_MONTHS) {
+        const oldestDateToKeep = new Date(Date.now() - maxAge);
+        return this.destroy({
+            createdAt: {
+                '<': oldestDateToKeep
+            }
+        });
     }
 });
 
