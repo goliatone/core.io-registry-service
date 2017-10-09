@@ -1,6 +1,6 @@
 'use strict';
 
-const Scheduler = require('redis-scheduler');
+const Scheduler = require('./lib/redis');
 const scheduler = new Scheduler({
     host: '192.168.99.100',
     port: 6379
@@ -15,11 +15,11 @@ scheduler.addHandler({
             scheduler.reschedule({
                 key: 'test-key',
                 expire: 1000
-            }, function () {
-                console.log('rescheduled');
+            }).then(()=>{
+                console.log('rescheduled', arguments);
             });
         } else {
-            scheduler.cancel({ key: 'test-key' }, function () {
+            scheduler.cancel({ key: 'test-key' }).then(()=>{
                 console.log('canceled');
             });
         }

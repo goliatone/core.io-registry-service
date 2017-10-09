@@ -1,6 +1,6 @@
 'use strict';
 
-const Scheduler = require('redis-scheduler');
+const Scheduler = require('./lib/redis');
 const scheduler = new Scheduler({
     host: '192.168.99.100',
     port: 6379
@@ -15,8 +15,9 @@ function eventTriggered(err, key) {
 scheduler.schedule({
     key: 'test-key',
     expire: expirationTime,
-    handler: eventTriggered
-}, function (err) {
-    if(err) console.error('error', err);
-    else console.info('scheduled!');
+    // handler: eventTriggered
+}).then((key)=>{
+    console.info('scheduled for %s!', key);
+}).catch((err) => {
+    console.error('error', err);
 });
