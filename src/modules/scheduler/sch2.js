@@ -19,7 +19,7 @@ scheduler.addHandler({
 function handler(err, key) {
     console.log('handler', arguments);
 
-    if(++count < 3) {
+    if(++count < 33) {
         scheduler.reschedule({
             key,
             expire: 1000
@@ -27,7 +27,7 @@ function handler(err, key) {
             console.log('rescheduled');
         });
     } else {
-        scheduler.cancel({key}).then(()=>{
+        scheduler.cancel(key).then(()=>{
             console.log('canceled');
         });
     }

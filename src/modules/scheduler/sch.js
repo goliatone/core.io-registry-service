@@ -3,7 +3,7 @@
 const Scheduler = require('./lib/redis');
 
 const KEY = 'test-key';
-const expirationTime = 1000;
+const expirationTime = 3000;
 
 const scheduler = new Scheduler({
     host: '192.168.99.100',
