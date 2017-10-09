@@ -2,10 +2,15 @@
 
 const EventEmitter = require('events');
 const redis = require('redis');
-const util = require('util');
+const extend = require('gextend');
 
 
-
+const DEFAULTS = {
+    host: 'localhost',
+    port: 6579,
+    db: 0,
+    autostart: true
+};
 
 class Scheduler extends EventEmitter {
 
@@ -26,16 +31,35 @@ class Scheduler extends EventEmitter {
     constructor(options={}){
         super();
 
-        this.db = options.db || 0;
+        options = extend({}, DEFAULTS, options);
+
+        this.db = options.db;
+
+        this.clients = {};
+        this.handlers = {};
+        this.patterns = {};
+
+        if(options.autostart) {
+            this.start(options);
+        }
+    }
+
+    start(options){
         this.clients = {
             listener: createRedisClient(options),
             scheduler: createRedisClient(options)
         };
 
-        this.handlers = {};
-        this.patterns = {};
-
         this._setRedisEvents();
+
+        /*
+         * This should be a timeout promise?
+         */
+        return new Promise((resolve, reject)=>{
+            this.clients.listener.once('ready', ()=>{
+                resolve();
+            });
+        });
     }
 
     /**
@@ -90,13 +114,12 @@ class Scheduler extends EventEmitter {
      *                            until expiration.
      * - handler (function)     - Function to call when scheduled
      *                            time occurs.
-     *                            
+     *
      * @param  {Object} options
      * @return {Promise}
      */
     schedule(options) {
         const {key, handler, pattern, expire} = options;
-        const {listener, scheduler} = this.clients;
 
         if (handler) {
             if (pattern) {
@@ -107,6 +130,10 @@ class Scheduler extends EventEmitter {
         }
 
         return new Promise((resolve, reject)=>{
+
+            const {scheduler} = this.clients;
+            console.log('scheduler', scheduler);
+            if(!scheduler) return reject(new Error('Not initialized'));
 
             if(!expire) return resolve();
 
@@ -200,6 +227,7 @@ class Scheduler extends EventEmitter {
         const {listener, scheduler} = this.clients;
 
         listener.on('ready', ()=>{
+            console.log('ready');
             this.emit('ready', 'listener');
         });
 
