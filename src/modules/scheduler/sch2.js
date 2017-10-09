@@ -1,6 +1,9 @@
 'use strict';
 
 const Scheduler = require('./lib/redis');
+
+const KEY = 'test-key';
+
 const scheduler = new Scheduler({
     host: '192.168.99.100',
     port: 6379
@@ -9,19 +12,24 @@ const scheduler = new Scheduler({
 let count = 0;
 
 scheduler.addHandler({
-    key: 'test-key',
-    handler: function () {
-        if(++count < 3) {
-            scheduler.reschedule({
-                key: 'test-key',
-                expire: 1000
-            }).then(()=>{
-                console.log('rescheduled', arguments);
-            });
-        } else {
-            scheduler.cancel({ key: 'test-key' }).then(()=>{
-                console.log('canceled');
-            });
-        }
-        console.log('test-key expired, launch job');
-}});
+    key: KEY,
+    handler
+});
+
+function handler(err, key) {
+    console.log('handler', arguments);
+
+    if(++count < 3) {
+        scheduler.reschedule({
+            key,
+            expire: 1000
+        }).then(()=>{
+            console.log('rescheduled');
+        });
+    } else {
+        scheduler.cancel({key}).then(()=>{
+            console.log('canceled');
+        });
+    }
+    console.log('test-key expired, launch job');
+}
