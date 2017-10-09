@@ -63,10 +63,37 @@ class Scheduler extends EventEmitter {
         return this.schedule(options);
     }
 
+    /**
+     * Reschedules a scheduled event.
+     * Will take either a new date to
+     * trigger or explicit milliseconds.
+     *
+     * options:
+     * - key    (string) - Event to reschedule.
+     * - expire (number) - Milliseconds/date to
+     *                     reset expiration to.
+     *
+     * @param  {Object} options
+     * @return {Promise}
+     */
     reschedule(options) {
         return this.schedule(options);
     }
 
+    /**
+     * Add a timed event.
+     *
+     * options:
+     * - key     (string)       - The key of event
+     *                            to store.
+     * - expire  (date/number)  - Date/number of milliseconds
+     *                            until expiration.
+     * - handler (function)     - Function to call when scheduled
+     *                            time occurs.
+     *                            
+     * @param  {Object} options
+     * @return {Promise}
+     */
     schedule(options) {
         const {key, handler, pattern, expire} = options;
         const {listener, scheduler} = this.clients;
@@ -92,7 +119,8 @@ class Scheduler extends EventEmitter {
 
             scheduler.exists(key, (err, exists) => {
                 if (exists) {
-                    scheduler.pexpire(key, expire, _promiseResponse);
+                    //reschedule
+                    scheduler.pexpire(key, millis, _promiseResponse);
                 } else {
                     scheduler.set(key, '', 'PX', millis, _promiseResponse);
                 }
@@ -100,29 +128,18 @@ class Scheduler extends EventEmitter {
         });
     }
 
-    _getHandlersByKey(key){
-        if (!this.handlers.hasOwnProperty(key)) {
-            this.handlers[key] = [];
-        }
-        return this.handlers[key];
-    }
-
-    _getHandlerByPattern(pattern){
-        if (!this.patterns.hasOwnProperty(pattern)) {
-            this.patterns[pattern] = {
-                key: new RegExp(pattern),
-                handlers: []
-            };
-        }
-
-        return this.patterns[pattern].handlers;
-    }
-
-    cancel(options, cb) {
+    /**
+     * Cancels a scheduled event
+     * and cleans up handlers.
+     *
+     * @param  {String} key
+     * @return {Promise}
+     */
+    cancel(key) {
         return new Promise((resolve, reject)=>{
-            this.clients.scheduler.del(options.key, (err)=>{
-                delete(this.handlers[options.key]);
-                delete(this.patterns[options.key]);
+            this.clients.scheduler.del(key, (err)=>{
+                delete(this.handlers[key]);
+                delete(this.patterns[key]);
                 if(err) reject(err);
                 else resolve();
             });
@@ -231,6 +248,24 @@ class Scheduler extends EventEmitter {
 
       this.clients.listener.unsubscribe(`__keyevent@${this.db}__:expired`);
       this.handlers = [];
+    }
+
+    _getHandlersByKey(key){
+        if (!this.handlers.hasOwnProperty(key)) {
+            this.handlers[key] = [];
+        }
+        return this.handlers[key];
+    }
+
+    _getHandlerByPattern(pattern){
+        if (!this.patterns.hasOwnProperty(pattern)) {
+            this.patterns[pattern] = {
+                key: new RegExp(pattern),
+                handlers: []
+            };
+        }
+
+        return this.patterns[pattern].handlers;
     }
 }
 
