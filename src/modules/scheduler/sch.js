@@ -6,6 +6,7 @@ const KEY = 'test-key';
 const expirationTime = 3000;
 
 const scheduler = new Scheduler({
+    autostart: true,
     host: '192.168.99.100',
     port: 6379
 });
