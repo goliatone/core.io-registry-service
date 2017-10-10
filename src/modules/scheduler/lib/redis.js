@@ -12,6 +12,16 @@ const DEFAULTS = {
     autostart: true
 };
 
+/**
+ * TODO: Keep track of schedules, assing ID, store
+ * key and interval and handler.
+ * TODO: Reschedule by schedule ID
+ * TODO: schedule options: reschedule:true should
+ * make an interval out of the event.
+ * reschedule:int should reschedule until int===0.
+ *
+ * @type {[type]}
+ */
 class Scheduler extends EventEmitter {
 
     /**
