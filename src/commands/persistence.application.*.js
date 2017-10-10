@@ -3,7 +3,7 @@
 
 function ApplicationCreatedCommand(event){
     const context = event.context;
-    const logger = context.getLogger('cmd');
+    const logger = context.getLogger('app.crt.cmd');
     const StatusEvent = context.models.StatusEvent;
 
     let {identity, action, record, type} = event;
