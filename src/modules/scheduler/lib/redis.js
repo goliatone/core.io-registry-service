@@ -39,12 +39,16 @@ class Scheduler extends EventEmitter {
         this.handlers = {};
         this.patterns = {};
 
+        this.options = options;
+
         if(options.autostart) {
             this.start(options);
         }
     }
 
     start(options){
+        options = extend({}, this.options, options);
+
         this.clients = {
             listener: createRedisClient(options),
             scheduler: createRedisClient(options)
@@ -132,7 +136,7 @@ class Scheduler extends EventEmitter {
         return new Promise((resolve, reject)=>{
 
             const {scheduler} = this.clients;
-            console.log('scheduler', scheduler);
+
             if(!scheduler) return reject(new Error('Not initialized'));
 
             if(!expire) return resolve();
@@ -193,7 +197,7 @@ class Scheduler extends EventEmitter {
 
         if (this.handlers.hasOwnProperty(key)) {
             this.handlers[key].forEach((handler)=>{
-                handler(null, key);
+                handler(null, {key});
             });
         }
     }
@@ -208,7 +212,7 @@ class Scheduler extends EventEmitter {
         }
 
         handlersToSend.forEach((handler)=>{
-            handler(null, key);
+            handler(null, {key});
         });
     }
 
