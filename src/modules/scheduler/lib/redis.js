@@ -129,6 +129,11 @@ class Scheduler extends EventEmitter {
      * - handler (function)     - Function to call when scheduled
      *                            time occurs.
      *
+     * It is possible to schedule a key that
+     * already has an existing schedule.
+     * In this case the time to live of a key
+     * is updated to the new value.
+     *
      * @param  {Object} options
      * @return {Promise}
      */
@@ -153,20 +158,24 @@ class Scheduler extends EventEmitter {
 
             const millis = this._getMillis(expire);
 
-            function _promiseResponse(err, res) {
-                if(err) reject(err);
-                else resolve(res);
-            }
+            const _responder = this._promisifyCallback(reject, resolve);
 
             scheduler.exists(key, (err, exists) => {
                 if (exists) {
                     //reschedule
-                    scheduler.pexpire(key, millis, _promiseResponse);
+                    scheduler.pexpire(key, millis, _responder);
                 } else {
-                    scheduler.set(key, '', 'PX', millis, _promiseResponse);
+                    scheduler.set(key, '', 'PX', millis, _responder);
                 }
             });
         });
+    }
+
+    _promisifyCallback(reject, resolve){
+        return function _promiseCallback(err, res) {
+            if(err) reject(err);
+            else resolve(res);
+        };
     }
 
     /**
