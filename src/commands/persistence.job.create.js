@@ -40,8 +40,10 @@ function JobCreatedCommand(event){
                 key: record.id,
                 expire: interval
             });
-            context.scheduler.strategy.reschedule({key: record.id,
-            expire: interval});
+            context.scheduler.strategy.reschedule({
+                key: record.id,
+                expire: interval
+            });
         }
     })
 
