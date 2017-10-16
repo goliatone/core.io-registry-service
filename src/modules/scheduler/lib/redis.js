@@ -9,7 +9,8 @@ const DEFAULTS = {
     host: 'localhost',
     port: 6579,
     db: 0,
-    autostart: true
+    autostart: true,
+    timeout: 10 * 1000 //Timeout after 10 seconds
 };
 
 /**
@@ -43,11 +44,15 @@ class Scheduler extends EventEmitter {
 
         options = extend({}, DEFAULTS, options);
 
+        //TODO: move to init(options)
+
         this.db = options.db;
 
         this.clients = {};
         this.handlers = {};
         this.patterns = {};
+
+        this._schedules = new Map();
 
         this.options = options;
 
@@ -59,6 +64,8 @@ class Scheduler extends EventEmitter {
     start(options){
         options = extend({}, this.options, options);
 
+        this.timeout = options.timeout;
+
         this.clients = {
             listener: createRedisClient(options),
             scheduler: createRedisClient(options)
@@ -67,10 +74,17 @@ class Scheduler extends EventEmitter {
         this._setRedisEvents();
 
         /*
-         * This should be a timeout promise?
+         * Try to stablish a connection to redis
+         * if we fail to connect in less than
+         * `timeout` the promise will be rejected.
          */
         return new Promise((resolve, reject)=>{
+            this._initTimeout = setTimeout(()=> {
+                reject(new Error('Timeout'));
+            }, this.timeout);
+
             this.clients.listener.once('ready', ()=>{
+                clearTimeout(this._initTimeout);
                 resolve();
             });
         });
@@ -138,37 +152,61 @@ class Scheduler extends EventEmitter {
      * @return {Promise}
      */
     schedule(options) {
-        const {key, handler, pattern, expire} = options;
-
-        if (handler) {
-            if (pattern) {
-                this._getHandlersByPattern(key).push(handler);
-            } else {
-                this._getHandlersByKey(key).push(handler);
-            }
-        }
+        const task = this._addTask(options);
 
         return new Promise((resolve, reject)=>{
+
+            /*
+             * If we are only adding a handler
+             * then this would make sense.
+             * If we don't provide either
+             * expire or handler then it
+             * does not make any sense at all
+             */
+            if(!task.expire) {
+                if(!task.isExecutable){
+                    console.warn('This call to schedule had no effect!');
+                }
+                return resolve();
+            }
 
             const {scheduler} = this.clients;
 
             if(!scheduler) return reject(new Error('Not initialized'));
 
-            if(!expire) return resolve();
 
-            const millis = this._getMillis(expire);
-
+            const millis = task.millis;
             const _responder = this._promisifyCallback(reject, resolve);
 
-            scheduler.exists(key, (err, exists) => {
+            scheduler.exists(task.key, (err, exists) => {
+                if(err) return reject(err);
+
                 if (exists) {
-                    //reschedule
-                    scheduler.pexpire(key, millis, _responder);
+                    /*
+                     * Key already exists, we are overwritting
+                     * it's expire value with a new value of
+                     * `millis`.
+                     */
+                    scheduler.pexpire(task.key, millis, _responder);
                 } else {
-                    scheduler.set(key, '', 'PX', millis, _responder);
+                    scheduler.set(task.key, '', 'PX', millis, _responder);
                 }
             });
         });
+    }
+
+    _addTask(options) {
+        let task = new Task(options);
+        this._schedules.set(task.key, task);
+
+        if (task.isExecutable) {
+            if (task.pattern) {
+                this._getHandlersByPattern(task.key).push(task.handler);
+            } else {
+                this._getHandlersByKey(task.key).push(task.handler);
+            }
+        }
+        return task;
     }
 
     _promisifyCallback(reject, resolve){
@@ -233,15 +271,6 @@ class Scheduler extends EventEmitter {
         handlersToSend.forEach((handler)=>{
             handler(null, {key});
         });
-    }
-
-    _getMillis(expiration) {
-        if (expiration instanceof Date) {
-            const now = new Date().getTime();
-            expiration = expiration.getTime() - now;
-      }
-
-      return expiration;
     }
 
     _setRedisEvents() {
@@ -350,4 +379,45 @@ function createRedisClient(options={}) {
     }
 
     return client;
+}
+
+const uuid = require('uuid').v4;
+
+class Task {
+    constructor(options) {
+        this.init(options);
+    }
+
+    init(options) {
+        if(!options.id) {
+            options.id = uuid();
+        }
+
+        this.id = options.id;
+        this.key = options.key;
+        this.expire = options.expire;
+        this.handler = options.handler;
+        this.reschedule = options.reschedule;
+
+        if(options.pattern) {
+            this.pattern = new RegExp(this.key);
+        }
+
+        if(typeof this.reschedule === 'number'){
+            this.repeat = this.count = this.reschedule;
+        }
+    }
+
+    get isExecutable(){
+        return typeof this.handler === 'function';
+    }
+
+    get millis(){
+        if (this.expire instanceof Date) {
+            const now = new Date().getTime();
+            this.expire = this.expire.getTime() - now;
+        }
+
+        return this.expire;
+    }
 }
