@@ -201,9 +201,9 @@ class Scheduler extends EventEmitter {
 
         if (task.isExecutable) {
             if (task.pattern) {
-                this._getHandlersByPattern(task.key).push(task.handler);
+                this._getHandlersByPattern(task.key).push(task);
             } else {
-                this._getHandlersByKey(task.key).push(task.handler);
+                this._getHandlersByKey(task.key).push(task);
             }
         }
         return task;
@@ -253,8 +253,8 @@ class Scheduler extends EventEmitter {
         this._checkForPatternMatches(key);
 
         if (this.handlers.hasOwnProperty(key)) {
-            this.handlers[key].forEach((handler)=>{
-                handler(null, {key});
+            this.handlers[key].handlers.forEach((task)=>{
+                task.handler(null, task);
             });
         }
     }
@@ -268,8 +268,8 @@ class Scheduler extends EventEmitter {
             }
         }
 
-        handlersToSend.forEach((handler)=>{
-            handler(null, {key});
+        handlersToSend.forEach((task)=>{
+            task.handler(null, task);
         });
     }
 
@@ -332,9 +332,12 @@ class Scheduler extends EventEmitter {
 
     _getHandlersByKey(key){
         if (!this.handlers.hasOwnProperty(key)) {
-            this.handlers[key] = [];
+            this.handlers[key] = {
+                key,
+                handlers: []
+            };
         }
-        return this.handlers[key];
+        return this.handlers[key].handlers;
     }
 
     _getHandlerByPattern(pattern){
