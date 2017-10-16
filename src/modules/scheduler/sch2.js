@@ -12,27 +12,38 @@ const scheduler = new Scheduler({
 
 let count = 0;
 
+/*
+ * We are not passing any
+ * expire value, which means
+ * that is using whatever value
+ * was used while scheduling the
+ * call.
+ */
 scheduler.addHandler({
     key: KEY,
     handler
+}).then((res)=>{
+    console.log('scheduled', res);
 }).catch((err)=>{
     console.log('err', err);
 });
 
-function handler(err, key) {
+function handler(err, event) {
     console.log('handler', arguments);
 
-    if(++count < 33) {
+    if(++count < 3) {
+        console.log('reschedule', count);
         scheduler.reschedule({
-            key,
+            key: event.key,
             expire: 1000
         }).then(()=>{
             console.log('rescheduled');
         });
     } else {
-        scheduler.cancel(key).then(()=>{
+        scheduler.cancel(event.key).then(()=>{
             console.log('canceled');
         });
     }
+
     console.log('test-key expired, launch job');
 }
