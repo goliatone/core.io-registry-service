@@ -49,9 +49,8 @@ class Scheduler extends EventEmitter {
         this.db = options.db;
 
         this.clients = {};
-        this.handlers = {};
-        this.patterns = {};
 
+        this._tasks = new Map();
         this._schedules = new Map();
 
         this.options = options;
@@ -148,6 +147,9 @@ class Scheduler extends EventEmitter {
      * In this case the time to live of a key
      * is updated to the new value.
      *
+     * We can use patterns for handlers, but
+     * does not make sense for schedules.
+     *
      * @param  {Object} options
      * @return {Promise}
      */
@@ -167,7 +169,7 @@ class Scheduler extends EventEmitter {
                 if(!task.isExecutable){
                     console.warn('This call to schedule had no effect!');
                 }
-                return resolve();
+                return resolve(task);
             }
 
             const {scheduler} = this.clients;
@@ -176,7 +178,7 @@ class Scheduler extends EventEmitter {
 
 
             const millis = task.millis;
-            const _responder = this._promisifyCallback(reject, resolve);
+            const _responder = this._promisifyCallback(task, reject, resolve);
 
             scheduler.exists(task.key, (err, exists) => {
                 if(err) return reject(err);
@@ -196,23 +198,30 @@ class Scheduler extends EventEmitter {
     }
 
     _addTask(options) {
-        let task = new Task(options);
-        this._schedules.set(task.key, task);
 
-        if (task.isExecutable) {
-            if (task.pattern) {
-                this._getHandlersByPattern(task.key).push(task);
-            } else {
-                this._getHandlersByKey(task.key).push(task);
-            }
+        let task;
+        if(options.id) {
+            task = this._tasks.get(options.id);
+            return task;
+        } else {
+            task = new Task(options);
+            this._tasks.set(task.id, task);
         }
+
+        if(!this._schedules.has(task.key)){
+            this._schedules.set(task.key, []);
+        }
+
+        let tasks = this._schedules.get(task.key);
+        tasks.push(task);
+
         return task;
     }
 
-    _promisifyCallback(reject, resolve){
+    _promisifyCallback(task, reject, resolve){
         return function _promiseCallback(err, res) {
             if(err) reject(err);
-            else resolve(res);
+            else resolve(task);
         };
     }
 
@@ -226,8 +235,7 @@ class Scheduler extends EventEmitter {
     cancel(key) {
         return new Promise((resolve, reject)=>{
             this.clients.scheduler.del(key, (err)=>{
-                delete(this.handlers[key]);
-                delete(this.patterns[key]);
+                this._schedules.set(key, []);
                 if(err) reject(err);
                 else resolve();
             });
@@ -249,27 +257,20 @@ class Scheduler extends EventEmitter {
      * @return {void}
      */
     _handleExpireEvent(key) {
+        let tasks = this._schedules.get(key);
 
-        this._checkForPatternMatches(key);
-
-        if (this.handlers.hasOwnProperty(key)) {
-            this.handlers[key].handlers.forEach((task)=>{
-                task.handler(null, task);
-            });
-        }
-    }
-
-    _checkForPatternMatches(key) {
-        const handlersToSend = [];
-
-        for (var pattern in this.patterns) {
-            if (this.patterns[pattern].key.test(key)) {
-                handlersToSend = handlersToSend.concat(this.patterns[pattern].handlers);
+        tasks.forEach((task)=>{
+            if(!task.isExecutable) return;
+            if(task.matches(key)){
+                task.run();
+                console.log('needs reschedule', task.needsReschedule);
+                if(task.needsReschedule){
+                    this.reschedule({
+                        key: task.key,
+                        expire: task.expire
+                    });
+                }
             }
-        }
-
-        handlersToSend.forEach((task)=>{
-            task.handler(null, task);
         });
     }
 
@@ -327,29 +328,10 @@ class Scheduler extends EventEmitter {
       this.clients.scheduler.removeAllListeners();
 
       this.clients.listener.unsubscribe(`__keyevent@${this.db}__:expired`);
-      this.handlers = [];
+      this._tasks = new Map();
+      this._schedules = new Map();
     }
 
-    _getHandlersByKey(key){
-        if (!this.handlers.hasOwnProperty(key)) {
-            this.handlers[key] = {
-                key,
-                handlers: []
-            };
-        }
-        return this.handlers[key].handlers;
-    }
-
-    _getHandlerByPattern(pattern){
-        if (!this.patterns.hasOwnProperty(pattern)) {
-            this.patterns[pattern] = {
-                key: new RegExp(pattern),
-                handlers: []
-            };
-        }
-
-        return this.patterns[pattern].handlers;
-    }
 }
 
 
@@ -386,6 +368,12 @@ function createRedisClient(options={}) {
 
 const uuid = require('uuid').v4;
 
+/*
+ * Tasks should be serialized in redis.
+ * So we can pull expire from different
+ * threads and we can call to reschedule
+ * from there...
+ */
 class Task {
     constructor(options) {
         this.init(options);
@@ -396,19 +384,49 @@ class Task {
             options.id = uuid();
         }
 
-        this.id = options.id;
-        this.key = options.key;
-        this.expire = options.expire;
-        this.handler = options.handler;
-        this.reschedule = options.reschedule;
+        this.reschedule = false;
+
+        extend(this, options);
+        this.runs = 0;
 
         if(options.pattern) {
             this.pattern = new RegExp(this.key);
         }
 
-        if(typeof this.reschedule === 'number'){
-            this.repeat = this.count = this.reschedule;
+        if(typeof this.reschedule === 'number') {
+            this.repeat = this.reschedule;
+            this.reschedule = true;
         }
+    }
+
+    matches(key){
+        if(this.pattern) {
+            return this.pattern.test(key);
+        }
+        return this.key === key;
+    }
+
+    run(err){
+        if(this.runExceeded){
+            return;
+        }
+
+        this.runs++;
+        this.handler(err, this);
+    }
+
+    get runExceeded(){
+        if(this.repeat && this.repeat === this.runs){
+            return true;
+        }
+        return false;
+    }
+
+    get needsReschedule(){
+        if(this.repeat) {
+            return !this.runExceeded;
+        }
+        return this.reschedule;
     }
 
     get isExecutable(){
