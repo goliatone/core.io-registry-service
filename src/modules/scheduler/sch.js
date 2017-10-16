@@ -11,16 +11,16 @@ const scheduler = new Scheduler({
     port: 6379
 });
 
-function eventTriggered(err, key) {
-    console.log(key + ' triggered');
+function eventTriggered(err, task) {
+    console.log('triggered', task);
 }
 
 scheduler.schedule({
     key: KEY,
     expire: expirationTime,
-    // handler: eventTriggered
-}).then((key)=>{
-    console.info('scheduled for %s!', key);
+    handler: eventTriggered
+}).then((task)=>{
+    console.info('scheduled for %j!', task);
 }).catch((err) => {
     console.error('error', err);
 });
