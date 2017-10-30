@@ -84,6 +84,8 @@ class Scheduler extends EventEmitter {
 
             this.clients.listener.once('ready', ()=>{
                 clearTimeout(this._initTimeout);
+                //TODO: we should ensureNotifyKeyspaceEventSet is set
+                //before we resolve this :)
                 resolve();
             });
         });
