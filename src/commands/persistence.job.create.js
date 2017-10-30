@@ -35,6 +35,7 @@ function JobCreatedCommand(event){
     context.scheduler.strategy.addHandler({
         key: record.id,
         handler: ()=>{
+            logger.info('handler for job', record.id);
             context.emit('schedule.ping', {
                 record,
                 key: record.id,
@@ -45,7 +46,7 @@ function JobCreatedCommand(event){
                 expire: interval
             });
         }
-    })
+    });
 
     // setInterval(() => {
     //     context.emit('schedule.ping', {
