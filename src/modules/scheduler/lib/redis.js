@@ -89,6 +89,17 @@ class Scheduler extends EventEmitter {
         });
     }
 
+    ensureNotifyKeyspaceEventSet(){
+        return new Promise((resolve, reject) => {
+            // notify-keyspace-event
+            this.clients.scheduler.CONFIG('GET', 'notify*', (err, value) => {
+                if(err) return reject(err);
+                this.logger.info('notify-keyspace-event is set', value);
+                resolve();
+            });
+        });
+    }
+
     /**
      * Use this function to add handlers.
      *
