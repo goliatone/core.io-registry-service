@@ -26,7 +26,7 @@ const BaseModel = require('core.io-persistence').BaseModel;
  *
  *
  */
-let Node = BaseModel.extend({
+let schema = {
     identity: 'application',
     exportName: 'Application',
     connection: 'development',
@@ -114,6 +114,9 @@ let Node = BaseModel.extend({
 
         });
     }
-});
+};
+
+let Node = BaseModel.extend(schema);
 
 module.exports = Node;
+module.exports.schema = schema;
