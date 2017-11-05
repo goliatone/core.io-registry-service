@@ -3,7 +3,10 @@
 const rp = require('request-promise');
 
 function SchedulePingHTTPCommand(event){
-    console.log('SchedulePingHTTPCommand', event.record.endpoint);
+    const context = event.context;
+    const logger = context.getLogger('http-ping');
+
+    logger.info('SchedulePingHTTPCommand', event.record.endpoint);
 
     let options = {
         uri: event.record.endpoint,
