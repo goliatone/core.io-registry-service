@@ -185,7 +185,7 @@ class Scheduler extends EventEmitter {
              * does not make any sense at all
              */
             if(!task.expire) {
-                if(!task.isExecutable){
+                if(!task.isExecutable) {
                     this.logger.warn('This call to schedule had no effect!');
                 }
                 return resolve(task);
@@ -300,10 +300,6 @@ class Scheduler extends EventEmitter {
         }
 
         tasks.forEach((task) => {
-            // if(!task.isExecutable) {
-            //     return this.logger.info('non executable task %s', task.type);
-            // }
-
             if(task.matches(key)) {
                 task.run();
 
