@@ -30,7 +30,7 @@ function ApplicationCreatedCommand(event){
     });
 
     return StatusEvent.create(notice).then(()=>{
-        console.log('created status event...');
+        logger.info('created status event...');
     });
 }
 
