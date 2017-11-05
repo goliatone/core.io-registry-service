@@ -237,6 +237,23 @@ class Scheduler extends EventEmitter {
         return task;
     }
 
+    _removeTask(task){
+        this._tasks.delete(task.id);
+
+        let tasks = this._schedules.get(task.key);
+
+        let i = 0,
+            l = tasks.length,
+            t;
+
+        for(; i < l; i++){
+            t = tasks[i];
+            if(t && t.id === task.id){
+                tasks.splice(i, 1);
+            }
+        }
+    }
+
     _promisifyCallback(task, reject, resolve){
         return function _promiseCallback(err, res) {
             if(err) reject(err);
@@ -277,22 +294,23 @@ class Scheduler extends EventEmitter {
      */
     _handleExpireEvent(key) {
         let tasks = this._schedules.get(key);
+
         if(!tasks) {
             return this.logger.warn('expired event %s has no tasks', key);
         }
 
-        tasks.forEach((task)=>{
-            if(!task.isExecutable){
-                return this.logger.info('non executable task %s', task.id);
-            }
-            if(task.matches(key)){
+        tasks.forEach((task) => {
+            // if(!task.isExecutable) {
+            //     return this.logger.info('non executable task %s', task.type);
+            // }
+
+            if(task.matches(key)) {
                 task.run();
-                this.logger.log('needs reschedule', task.needsReschedule);
-                if(task.needsReschedule){
-                    this.reschedule({
-                        key: task.key,
-                        expire: task.expire
-                    });
+
+                if(task.needsReschedule) {
+                    this.reschedule({id: task.id});
+                } else {
+                    this._removeTask(task);
                 }
             }
         });
@@ -432,12 +450,15 @@ class Task {
     }
 
     run(err){
-        if(this.runExceeded){
+        if(this.runExceeded) {
             return;
         }
 
         this.runs++;
-        this.handler(err, this);
+
+        if(this.isExecutable) {
+            this.handler(err, this);
+        }
     }
 
     get type(){
