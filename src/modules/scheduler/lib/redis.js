@@ -6,6 +6,7 @@ const extend = require('gextend');
 
 
 const DEFAULTS = {
+    logger: console,
     host: 'localhost',
     port: 6579,
     db: 0,
@@ -45,6 +46,8 @@ class Scheduler extends EventEmitter {
         options = extend({}, DEFAULTS, options);
 
         //TODO: move to init(options)
+
+        this.logger = options.logger;
 
         this.db = options.db;
 
@@ -124,6 +127,7 @@ class Scheduler extends EventEmitter {
      * @return {Promise}
      */
     addHandler(options) {
+        options._type = 'addHandler';
         return this.schedule(options);
     }
 
@@ -141,6 +145,8 @@ class Scheduler extends EventEmitter {
      * @return {Promise}
      */
     reschedule(options) {
+        this.logger.info('reschedule');
+        options._type = 'reschedule';
         return this.schedule(options);
     }
 
@@ -168,7 +174,7 @@ class Scheduler extends EventEmitter {
      */
     schedule(options) {
         const task = this._addTask(options);
-
+        this.logger.info('-> schedule(%j)', options);
         return new Promise((resolve, reject)=>{
 
             /*
@@ -180,7 +186,7 @@ class Scheduler extends EventEmitter {
              */
             if(!task.expire) {
                 if(!task.isExecutable){
-                    console.warn('This call to schedule had no effect!');
+                    this.logger.warn('This call to schedule had no effect!');
                 }
                 return resolve(task);
             }
@@ -271,12 +277,17 @@ class Scheduler extends EventEmitter {
      */
     _handleExpireEvent(key) {
         let tasks = this._schedules.get(key);
+        if(!tasks) {
+            return this.logger.warn('expired event %s has no tasks', key);
+        }
 
         tasks.forEach((task)=>{
-            if(!task.isExecutable) return;
+            if(!task.isExecutable){
+                return this.logger.info('non executable task %s', task.id);
+            }
             if(task.matches(key)){
                 task.run();
-                console.log('needs reschedule', task.needsReschedule);
+                this.logger.log('needs reschedule', task.needsReschedule);
                 if(task.needsReschedule){
                     this.reschedule({
                         key: task.key,
@@ -293,7 +304,7 @@ class Scheduler extends EventEmitter {
         const {listener, scheduler} = this.clients;
 
         listener.on('ready', ()=>{
-            console.log('ready');
+            this.logger.log('ready');
             this.emit('ready', 'listener');
         });
 
@@ -400,6 +411,7 @@ class Task {
         this.reschedule = false;
 
         extend(this, options);
+
         this.runs = 0;
 
         if(options.pattern) {
@@ -426,6 +438,10 @@ class Task {
 
         this.runs++;
         this.handler(err, this);
+    }
+
+    get type(){
+        return this._type;
     }
 
     get runExceeded(){
