@@ -6,7 +6,7 @@ const Scheduler = require('./lib/scheduler');
  * https://bunkat.github.io/later/
  * http://bunkat.github.io/schedule/
  * https://www.npmjs.com/package/node-schedule
- * 
+ *
  * Intialization routing. Here we expose
  * our scheduler Service to be available
  * through the app.
@@ -15,6 +15,11 @@ const Scheduler = require('./lib/scheduler');
  * @return {void}
  */
 module.exports.init = function(context, config){
+
+    if(!config.logger){
+        config.logger = context.getLogger('scheduler');
+    }
+
     let scheduler = new Scheduler(config);
 
     scheduler.boot().then(() => {
