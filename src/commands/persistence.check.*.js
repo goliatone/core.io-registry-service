@@ -6,7 +6,7 @@
  */
 function OnCheckCommand(event){
     const context = event.context;
-    const logger = context.getLogger('cmd');
+    const logger = context.getLogger('check-cmd');
 
     let check = event.record;
 
@@ -77,7 +77,7 @@ function OnCheckCommand(event){
         promises.push(job.save());
 
         return Promise.all(promises).then(()=>{
-            console.log('job updated...');
+            logger.info('job updated...');
         });
 
     }).catch(logger.error);
