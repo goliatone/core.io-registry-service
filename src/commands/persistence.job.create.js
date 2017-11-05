@@ -17,7 +17,7 @@ function JobCreatedCommand(event){
     let record = event.record;
     let Job = context.models.Job;
 
-    logger.info('JobCreatedCommand', record);
+    logger.info('JobCreatedCommand', record, event.id);
 
     /*
      * This simulates the Scheduler's purpose:
@@ -32,29 +32,34 @@ function JobCreatedCommand(event){
         logger.warn('Job Scheduled!!! will fire in %s', interval);
     });
 
+    context.scheduler.on('schedule.event', (e) => {
+
+        logger.info('schedule.event => schedule.ping', e);
+
+        context.emit('schedule.ping', {
+            record,
+            key: record.id,
+            expire: interval
+        });
+    });
+
     context.scheduler.strategy.addHandler({
         key: record.id,
         handler: ()=>{
             logger.info('handler for job', record.id);
-            context.emit('schedule.ping', {
-                record,
-                key: record.id,
-                expire: interval
-            });
+
+            // context.emit('schedule.ping', {
+            //     record,
+            //     key: record.id,
+            //     expire: interval
+            // });
+
             context.scheduler.strategy.reschedule({
                 key: record.id,
                 expire: interval
             });
         }
     });
-
-    // setInterval(() => {
-    //     context.emit('schedule.ping', {
-    //         record,
-    //         key: record.id,
-    //         expire: interval
-    //     });
-    // }, interval);
 }
 
 module.exports = JobCreatedCommand;
