@@ -2,6 +2,7 @@
 
 
 module.exports = {
+    logger: console,
     autoinitialize: true,
     strategy: 'native',
     interval: 10000,
