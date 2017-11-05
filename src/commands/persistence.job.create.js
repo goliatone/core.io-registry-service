@@ -27,7 +27,8 @@ function JobCreatedCommand(event){
 
     context.scheduler.schedule({
         key: record.id,
-        expire: interval
+        expire: interval,
+        reschedule: true
     }).then(() => {
         logger.warn('Job Scheduled!!! will fire in %s', interval);
     });
@@ -43,10 +44,10 @@ function JobCreatedCommand(event){
         });
     });
 
-    context.scheduler.strategy.addHandler({
-        key: record.id,
-        handler: ()=>{
-            logger.info('handler for job', record.id);
+    // context.scheduler.strategy.addHandler({
+    //     key: record.id,
+    //     handler: ()=>{
+    //         logger.info('handler for job', record.id);
 
             // context.emit('schedule.ping', {
             //     record,
@@ -54,12 +55,12 @@ function JobCreatedCommand(event){
             //     expire: interval
             // });
 
-            context.scheduler.strategy.reschedule({
-                key: record.id,
-                expire: interval
-            });
-        }
-    });
+            // context.scheduler.strategy.reschedule({
+            //     key: record.id,
+            //     expire: interval
+            // });
+    //     }
+    // });
 }
 
 module.exports = JobCreatedCommand;
