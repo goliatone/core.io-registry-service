@@ -18,9 +18,15 @@ function eventTriggered(err, task) {
 scheduler.schedule({
     key: KEY,
     expire: expirationTime,
-    handler: eventTriggered
-}).then((task)=>{
+    reschedule: true
+}).then((task) => {
     console.info('scheduled for %j!', task);
 }).catch((err) => {
     console.error('error', err);
+});
+
+scheduler.addHandler({
+    key: KEY,
+    handler: eventTriggered,
+    reschedule: 6
 });
