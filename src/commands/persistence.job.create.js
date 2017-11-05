@@ -34,33 +34,13 @@ function JobCreatedCommand(event){
     });
 
     context.scheduler.on('schedule.event', (e) => {
-
         logger.info('schedule.event => schedule.ping', e);
-
         context.emit('schedule.ping', {
             record,
             key: record.id,
             expire: interval
         });
     });
-
-    // context.scheduler.strategy.addHandler({
-    //     key: record.id,
-    //     handler: ()=>{
-    //         logger.info('handler for job', record.id);
-
-            // context.emit('schedule.ping', {
-            //     record,
-            //     key: record.id,
-            //     expire: interval
-            // });
-
-            // context.scheduler.strategy.reschedule({
-            //     key: record.id,
-            //     expire: interval
-            // });
-    //     }
-    // });
 }
 
 module.exports = JobCreatedCommand;
