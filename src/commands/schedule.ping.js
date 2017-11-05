@@ -1,14 +1,15 @@
 'use strict';
 
+let count = 0;
 
 function SchedulePingCommand(event){
     let context = event.context;
-    let logger = context.getLogger('cmd');
+    let logger = context.getLogger('sch-ping-cmd');
     let record = event.record;
 
     let Check = context.models.Check;
 
-    console.log('ping ', record.endpoint);
+    logger.info('ping ', record.endpoint, ++count);
 
     let type = getTypeFromEndpoint(record.endpoint);
     let command = commandImplementation(type);
@@ -16,12 +17,12 @@ function SchedulePingCommand(event){
     let check = Check.start(record);
 
     command.call(context, event).then((response) => {
-        console.log('response', response.statusCode);
+        logger.info('response %s count %s', response.statusCode, count);
         check.statusCode = response.statusCode;
         return Check.commit(null, check);
     }).catch((err)=>{
         return Check.commitKo(err, check);
-    }).then(console.log);
+    }).then(logger.info);
 }
 
 module.exports = SchedulePingCommand;
