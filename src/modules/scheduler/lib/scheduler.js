@@ -23,23 +23,29 @@ class Scheduler extends EventEmitter {
     init(config={}){
         extend(this, config);
         let Strategy = this.strategyMap[this.strategy];
+        this.options.logger = this.logger.getLogger('strategy')
         this.strategy = new Strategy(this.options);
     }
 
     schedule(options) {
-        console.log('Scheduler.schedule(%j)', options);
+        this.logger.info('Scheduler.schedule(%j)', options);
+        let handler = options.handler;
 
-        options.handler = (err, event)=>{
-            console.log('options.handler', err, event);
+        options.handler = (err, event)=> {
+            this.logger.info('options.handler', event);
+
+            if(handler) handler(err, event);
+
             this.tick(event);
         };
+
         return this.strategy.schedule(options);
     }
 
     tick(event={}){
         event = this.buildEvent(event);
-        console.log('on.tick', event);
-        this.emit('schedule.event');
+        this.logger.info('on.tick', event);
+        this.emit('schedule.event', event);
     }
 
     buildEvent(event={}){
