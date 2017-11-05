@@ -3,7 +3,7 @@
 const BaseModel = require('core.io-persistence').BaseModel;
 const MAX_AGE_3_MONTHS = 3 * 31 * 24 * 60 * 60 * 1000;
 
-let Node = BaseModel.extend({
+let schema = {
     identity: 'statusevent',
     exportName: 'StatusEvent',
     connection: 'development',
@@ -36,6 +36,9 @@ let Node = BaseModel.extend({
             }
         });
     }
-});
+};
+
+let Node = BaseModel.extend(schema);
 
 module.exports = Node;
+module.exports.schema = schema;
