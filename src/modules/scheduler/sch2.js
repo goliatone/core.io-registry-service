@@ -33,7 +33,7 @@ scheduler.addHandler({
     key: KEY,
     handler: handler2,
     repeat: 2
-})
+});
 
 function handler(err, event) {
     console.log('handler', arguments);
