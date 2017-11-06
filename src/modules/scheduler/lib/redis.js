@@ -89,16 +89,28 @@ class Scheduler extends EventEmitter {
                 clearTimeout(this._initTimeout);
                 //TODO: we should ensureNotifyKeyspaceEventSet is set
                 //before we resolve this :)
-                resolve();
+                // resolve();
+                this.ensureNotifyKeyspaceEventSet()
+                    .then(resolve)
+                    .catch(reject);
             });
         });
     }
 
-    ensureNotifyKeyspaceEventSet(){
+    ensureNotifyKeyspaceEventSet() {
         return new Promise((resolve, reject) => {
             // notify-keyspace-event
             this.clients.scheduler.CONFIG('GET', 'notify*', (err, value) => {
-                if(err) return reject(err);
+                if(err){
+                    this.logger.info('notify-keyspace-event error:', err);
+                    return reject(err);
+                }
+
+                if(!value || Array.isArray(value) && value.length === 0){
+                    this.logger.info('notify-keyspace-event NOT set', value);
+                    return reject();
+                }
+
                 this.logger.info('notify-keyspace-event is set', value);
                 resolve();
             });
@@ -128,6 +140,7 @@ class Scheduler extends EventEmitter {
      */
     addHandler(options) {
         options._type = 'addHandler';
+        this.logger.info('addHandler');
         return this.schedule(options);
     }
 
@@ -203,6 +216,7 @@ class Scheduler extends EventEmitter {
                 if(err) return reject(err);
 
                 if (exists) {
+                    this.logger.info('register using pexpire');
                     /*
                      * Key already exists, we are overwritting
                      * it's expire value with a new value of
@@ -210,6 +224,7 @@ class Scheduler extends EventEmitter {
                      */
                     scheduler.pexpire(task.key, millis, _responder);
                 } else {
+                    this.logger.info('register using set');
                     scheduler.set(task.key, '', 'PX', millis, _responder);
                 }
             });
@@ -293,14 +308,23 @@ class Scheduler extends EventEmitter {
      * @return {void}
      */
     _handleExpireEvent(key) {
+        let time = Date.now();
+
         let tasks = this._schedules.get(key);
 
         if(!tasks) {
             return this.logger.warn('expired event %s has no tasks', key);
         }
 
+        this.logger.warn('handleExpireEvent');
+        this.logger.warn('total tasks: %s', tasks.length);
+        this.logger.warn('key: %s', key);
+        this.logger.warn('time: %s', time);
+
         tasks.forEach((task) => {
             if(task.matches(key)) {
+                this.logger.warn('run task %s for %s', task.type, key);
+
                 task.run();
 
                 if(task.needsReschedule) {
@@ -355,6 +379,8 @@ class Scheduler extends EventEmitter {
          * Just route it
          */
         listener.on('message', (channel, message) => {
+            this.logger.info('-------')
+            this.logger.info('message', channel, message);
             this._handleExpireEvent(message);
         });
 
@@ -426,6 +452,12 @@ class Task {
 
         extend(this, options);
 
+        /*
+         * We want to expose the
+         * type on our task object.
+         */
+        // this.type = options._type;
+
         this.runs = 0;
 
         if(options.pattern) {
@@ -460,6 +492,8 @@ class Task {
     get type(){
         return this._type;
     }
+
+    set type(v){}
 
     get runExceeded(){
         if(this.repeat && this.repeat === this.runs){
