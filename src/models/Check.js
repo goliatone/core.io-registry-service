@@ -62,7 +62,7 @@ let schema = {
             timeoutAfter: record.timeoutAfter
         };
     },
-    commit: function(err, record){
+    commit: function(err, record) {
         if(err) return this.commitKo(err, record);
 
         /*
