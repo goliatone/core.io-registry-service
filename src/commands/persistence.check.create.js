@@ -8,6 +8,8 @@ function OnCheckCommand(event){
     const context = event.context;
     const logger = context.getLogger('check-cmd');
 
+    logger.info('check command on %s', event.action);
+
     let check = event.record;
 
     const Job = context.models.Job;
@@ -37,7 +39,7 @@ function OnCheckCommand(event){
             job.downtime = 0;
         }
 
-        if(check.isResponsive){
+        if(check.isResponsive) {
             job.notResponsiveCount = 0;
         } else {
             job.notResponsiveCount++;
@@ -64,12 +66,12 @@ function OnCheckCommand(event){
             job.markEventNotified();
         }
 
-        let durationSinceLastChange = now.getTime() - job.lastChangedAt.getTime();
+        let timeSinceLastChange = now.getTime() - job.lastChangedAt.getTime();
 
         if (check.isUp) {
-            job.uptime = durationSinceLastChange;
+            job.uptime = timeSinceLastChange;
         } else {
-            job.downtime = durationSinceLastChange;
+            job.downtime = timeSinceLastChange;
         }
 
         ++job.pingCount;
