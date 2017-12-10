@@ -21,3 +21,11 @@ services:
       options:
         max-size: "50m"
         max-file: "3"
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
