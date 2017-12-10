@@ -26,7 +26,8 @@
     "redis-scheduler": "^1.0.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.1",
-    "sails-disk": "*"
+    "sails-disk": "*",
+    "waterline-crud": "0.0.6"
   },
   "devDependencies": {
     "bogota": "^2.0.4",
