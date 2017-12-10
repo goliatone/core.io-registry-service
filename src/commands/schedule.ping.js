@@ -2,7 +2,7 @@
 
 let count = 0;
 
-function SchedulePingCommand(event){
+function SchedulePingCommand(event) {
     let context = event.context;
     let logger = context.getLogger('sch-ping-cmd');
     let record = event.record;
@@ -20,7 +20,7 @@ function SchedulePingCommand(event){
         logger.info('response %s count %s', response.statusCode, count);
         check.statusCode = response.statusCode;
         return Check.commit(null, check);
-    }).catch((err)=>{
+    }).catch((err) => {
         return Check.commitKo(err, check);
     }).then(logger.info);
 }
@@ -28,10 +28,23 @@ function SchedulePingCommand(event){
 module.exports = SchedulePingCommand;
 
 
-function getTypeFromEndpoint(uri){
+function getTypeFromEndpoint(uri) {
     return uri.split('://')[0];
 }
 
-function commandImplementation(type){
+/**
+ * We should implement this!
+ * The idea is that our applications 
+ * can provide different kind of transports
+ * to check:
+ * - http
+ * - https
+ * - tcp
+ * - websocket
+ * - etc
+ * 
+ * @param {String} type Check type
+ */
+function commandImplementation(type) {
     return require(`./schedule.ping.${type}`);
 }
