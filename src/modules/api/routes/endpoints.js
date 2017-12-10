@@ -15,14 +15,14 @@ const express = require('express');
  *                         be mounted.
  * @return {void}
  */
-module.exports = function(router, config, subapp){
+module.exports = function (router, config, subapp) {
 
     initialize(subapp, config);
 
     router.use('/', subapp);
 };
 
-function initialize(router, config){
+function initialize(router, config) {
     // let router = express.Router();
 
     const context = config.context;
@@ -48,12 +48,12 @@ function initialize(router, config){
      * sent back as a response. Which should be
      * used to de-register it.
      */
-    router.post('/register', function registrerHandler(req, res, next){
+    router.post('/register', function registrerHandler(req, res, next) {
         let body = req.body;
 
         logger.info('POST /register %j', body);
 
-        Application.createFromPayload(body).then((result={identifier:null})=>{
+        Application.createFromPayload(body).then((result = { identifier: null }) => {
             logger.info('registered app with identifier %s', result.identifier);
             res.send({
                 success: true,
@@ -69,13 +69,13 @@ function initialize(router, config){
      * This should be called by an application
      * after it first registerd.
      */
-    router.post('/unregister', function registrerHandler(req, res, next){
+    router.post('/unregister', function registrerHandler(req, res, next) {
         let identifier = req.body.identifier;
 
         logger.info('POST /unregister %j', identifier, req.originalUrl);
         //TODO: if no identifier provided, we should try to use
         //originalUrl instead.
-        Application.update({identifier: identifier}, {online: false}).then((result)=>{
+        Application.update({ identifier: identifier }, { online: false }).then((result) => {
             res.send({
                 success: true
             });
@@ -86,7 +86,7 @@ function initialize(router, config){
      * List registered applications.
      */
     router.get('/application', function jobHandler(req, res, next) {
-        Application.find().then((result)=>{
+        Application.find().then((result) => {
             res.send({
                 success: true,
                 value: result
@@ -94,9 +94,9 @@ function initialize(router, config){
         }).catch(next);
     });
 
-    router.get('/application/:id/jobs', function appJobListHandler(req, res, next){
+    router.get('/application/:id/jobs', function appJobListHandler(req, res, next) {
         let appId = req.params.id;
-        Job.findOne({application:appId}).then((result)=>{
+        Job.findOne({ application: appId }).then((result) => {
             res.send({
                 success: true,
                 value: result
@@ -110,8 +110,8 @@ function initialize(router, config){
         });
     });
 
-    router.get('/job', function jobListHandler(req, res, next){
-        Job.find().populate('application').then((result)=>{
+    router.get('/job', function jobListHandler(req, res, next) {
+        Job.find().populate('application').then((result) => {
             res.send({
                 success: true,
                 value: result
@@ -120,7 +120,7 @@ function initialize(router, config){
     });
 
     router.get('/job/:id', function jobDetailHandler(req, res, next) {
-        Job.findOne(req.params.id).then((result)=>{
+        Job.findOne(req.params.id).then((result) => {
             res.send({
                 success: true,
                 value: result
@@ -129,7 +129,7 @@ function initialize(router, config){
     });
 
     router.get('/job/:id/checks', function jobCheckHandler(req, res, next) {
-        Check.find({job:req.params.id}).then((result)=>{
+        Check.find({ job: req.params.id }).then((result) => {
             res.send({
                 success: true,
                 value: result
@@ -138,7 +138,7 @@ function initialize(router, config){
     });
 
     router.get('/job/:id/checks/count', function jobCheckCountHandler(req, res, next) {
-        Check.count({job:req.params.id}).then((result)=>{
+        Check.count({ job: req.params.id }).then((result) => {
             res.send({
                 success: true,
                 value: result
@@ -147,7 +147,7 @@ function initialize(router, config){
     });
 
     router.get('/job/:id/events', function jobStatusEventHandler(req, res, next) {
-        StatusEvent.find({job:req.params.id}).then((result)=>{
+        StatusEvent.find({ job: req.params.id }).then((result) => {
             res.send({
                 success: true,
                 value: result
@@ -156,7 +156,7 @@ function initialize(router, config){
     });
 
     router.get('/event', function jobStatusEventHandler(req, res, next) {
-        StatusEvent.find().then((result)=>{
+        StatusEvent.find().then((result) => {
             res.send({
                 success: true,
                 value: result
