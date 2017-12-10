@@ -1,0 +1,46 @@
+#!/bin/bash
+
+MONGO_ADMIN_USER="admin-user"
+MONGO_ADMIN_PASS="admin"
+MONGO_USER="user-agent"
+MONGO_PASS="user"
+
+# We want to create admin superuser, log out because our
+# current user wont have privileges... here we go:
+# bash into the container
+docker exec -i -t mongo bash
+
+# connect to local mongo
+mongo
+
+# create the first admin user
+use admin
+db.createUser(
+{
+    user: "$MONGO_ADMIN_USER",
+    pwd: "$MONGO_ADMIN_PASS",
+    roles: [
+      { role: "userAdminAnyDatabase", db: "admin" }
+    ]
+});
+exit
+
+# exit the mongo shell
+exit
+
+#log into mongo using the superadmin credentials
+sudo docker exec -i -t mongo bash
+docker exec -it mongo mongo admin -u $MONGO_ADMIN_USER -p $MONGO_ADMIN_PASS --authenticationDatabase admin
+
+
+#create our user
+use registry
+db.createUser(
+{
+    user: "$MONGO_USER",
+    pwd: "$MONGO_PASS",
+    roles: [
+      "dbOwner"
+    ]
+});
+exit
