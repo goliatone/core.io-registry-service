@@ -58,6 +58,8 @@ After a new application instance is created a default job is assigned to it.
 
 #### Jobs
 
+NOTE: If you have an application registered, but there are no jobs present, check that your redis is properly configured.
+
 ##### Health
 Default job that will check if the application is up. There are different strategies available like HTTP, MQTT, etc.
 
@@ -69,6 +71,21 @@ Error reporting, if the server is closing due to an error, it should include it 
 Application - has-many -* Instance
 
 https://www.npmjs.com/package/electron-mac-notifier
+
+
+## Docker 
+
+### Redis 
+
+Run locally
+```bash
+docker run -d -v ./ops/redis/redis.conf:/etc/redis.conf -p 6379:6379 redis
+```
+
+```bash
+docker volume create mongodbdata
+docker run -p 27017:27017 --restart=always -v mongodbdata:/data/db --name mongo -d mongo:latest --auth
+```
 
 ### TODO
 - [ ] Generate an app identifier that is reproducible (hostname + appId)
