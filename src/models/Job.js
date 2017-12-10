@@ -11,7 +11,7 @@ let schema = {
             type: 'text',
             primaryKey: true,
             unique: true,
-            defaultsTo: function() {
+            defaultsTo: function () {
                 return BaseModel.uuid();
             }
         },
@@ -92,26 +92,26 @@ let schema = {
          * to notify of a given event
          * such as site up, down, or etc.
          */
-        mustNotifyEvent: function(check){
+        mustNotifyEvent: function (check) {
 
-            if(this.pingCount === 0){
+            if (this.pingCount === 0) {
                 return true;
             }
 
-            if(!check.isUp){
+            if (!check.isUp) {
                 /*
                  * First time job fails...
                  */
-                if(this.isUp !== check.isUp){
+                if (this.isUp !== check.isUp) {
                     this.errorCount = 1;
                 }
 
-                if(this.errorCount < this.errorAlterThreshold){
+                if (this.errorCount < this.errorAlterThreshold) {
                     this.errorCount++;
                     return false;
                 }
 
-                if(this.errorCount === this.errorAlterThreshold){
+                if (this.errorCount === this.errorAlterThreshold) {
                     return true;
                 }
 
@@ -119,14 +119,14 @@ let schema = {
                  * We only want to trigger the unresponsive
                  * alert once per cycle.
                  */
-                if(!check.isResponsive && (this.notResponsiveCount + 1) === this.responseiveAlertThreshold){
+                if (!check.isResponsive && (this.notResponsiveCount + 1) === this.responseiveAlertThreshold) {
                     return true;
                 }
 
                 return false;
             }
 
-            if(this.isUp !== check.isUp && this.errorCount > this.errorAlterThreshold){
+            if (this.isUp !== check.isUp && this.errorCount > this.errorAlterThreshold) {
                 /*
                  * Check is up after triggering the
                  * down alert threshold
@@ -140,19 +140,19 @@ let schema = {
              */
             return false;
         },
-        markEventNotified: function(){
+        markEventNotified: function () {
             // increase error count to disable notification if the next ping has the same status
             this.errorCount = this.errorAlterThreshold + 1;
         }
     },
-    createDefaultFor: function(id, options){
-        if(typeof options === 'string') {
+    createDefaultFor: function (id, options) {
+        if (typeof options === 'string') {
             options = {
                 url: options
             };
         }
 
-        if(!options.interval) {
+        if (!options.interval) {
             options.interval = (0.5 * 60 * 1000);
         }
 
