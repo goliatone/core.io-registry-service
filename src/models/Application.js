@@ -35,7 +35,7 @@ let schema = {
             type: 'text',
             primaryKey: true,
             unique: true,
-            defaultsTo: function() {
+            defaultsTo: function () {
                 return BaseModel.uuid();
             }
         },
@@ -44,7 +44,7 @@ let schema = {
             unique: true,
         },
         appId: {
-            type:'string',
+            type: 'string',
             index: true
         },
         hostname: 'string',
@@ -70,7 +70,7 @@ let schema = {
         label: 'string',
         description: 'string',
     },
-    createFromPayload: function(payload) {
+    createFromPayload: function (payload) {
         let attrs = [
             'appId',
             'hostname',
@@ -82,14 +82,14 @@ let schema = {
             online: true
         };
 
-        attrs.forEach((attr)=>{
+        attrs.forEach((attr) => {
             values[attr] = payload[attr];
         });
 
-        Object.keys(payload).forEach((key)=>{
-            if(attrs.includes(key)) return;
+        Object.keys(payload).forEach((key) => {
+            if (attrs.includes(key)) return;
 
-            if(!values.data) {
+            if (!values.data) {
                 values.data = {};
             }
             values.data[key] = payload[key];
@@ -97,19 +97,24 @@ let schema = {
 
         let criteria = {};
 
-        if(values.identifier) {
+        if (values.identifier) {
             criteria.identifier = payload.identifier;
         } else {
             values.identifier =
-            criteria.identifier = payload.appId + '@' + payload.hostname;
+                criteria.identifier = payload.appId + '@' + payload.hostname;
         }
 
-        return this.updateOrCreate(criteria, values).then((record)=>{
-            if(payload.health) {
-                return Job.createDefaultFor(record.id, payload.health).then(()=>{
+        return this.updateOrCreate(criteria, values).then((record) => {
+            /**
+             * If the application specified a health 
+             * endpoint, then we register a job.
+             */
+            if (payload.health) {
+                return Job.createDefaultFor(record.id, payload.health).then(() => {
                     return record;
                 });
             }
+            
             return record;
 
         });
