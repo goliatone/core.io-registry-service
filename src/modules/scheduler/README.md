@@ -23,7 +23,7 @@ docker run -it --link myredis:redis --rm redis redis-cli -h redis -p 6379
 redis:6379> CONFIG set notify-keyspace-events Ex
 ```
 
-If we want to run redis with a custom configuration file:
+If we want to run `redis` with a custom configuration file:
 
 ```yml
 FROM redis
