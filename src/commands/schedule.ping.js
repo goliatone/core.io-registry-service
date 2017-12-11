@@ -19,7 +19,23 @@ function SchedulePingCommand(event) {
     command.call(context, event).then((response) => {
         logger.info('response %s count %s', response.statusCode, count);
         check.statusCode = response.statusCode;
-        return Check.commit(null, check);
+        return Check.commit(null, check).then(([check])=>{
+            context.influx.writePoints([
+                {
+                  measurement: 'probe',
+                  tags: { 
+                      status: check.statusCode, 
+                      up: check.isUp,
+                      responsive: check.isResponsive,
+                      job: check.job
+                  },
+                  fields: { response: check.responseTime },
+                  timestamp: check.requestTime
+                }
+              ]).catch(err => {
+                console.error(`Error saving data to InfluxDB! ${err.stack}`);
+              });
+        });
     }).catch((err) => {
         return Check.commitKo(err, check);
     }).then(logger.info);
@@ -28,7 +44,7 @@ function SchedulePingCommand(event) {
 module.exports = SchedulePingCommand;
 
 
-function getTypeFromEndpoint(uri) {
+function getTypeFromEndpoint(uri='') {
     return uri.split('://')[0];
 }
 
