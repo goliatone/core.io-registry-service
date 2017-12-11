@@ -7,6 +7,7 @@ let schema = {
     identity: 'check',
     exportName: 'Check',
     connection: 'development',
+    autoUpdatedAt: false,
     attributes: {
         id: {
             type: 'text',
@@ -16,6 +17,7 @@ let schema = {
                 return BaseModel.uuid();
             }
         },
+        uuid: false,
         /*
          * false if ping returned a non-OK
          * status code or timed out
