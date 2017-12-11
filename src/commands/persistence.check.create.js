@@ -4,7 +4,7 @@
  * This is where the actual monitoring
  * happens...
  */
-function OnCheckCommand(event){
+function OnCheckCommand(event) {
     const context = event.context;
     const logger = context.getLogger('check-cmd');
 
@@ -15,7 +15,7 @@ function OnCheckCommand(event){
     const Job = context.models.Job;
     const StatusEvent = context.models.StatusEvent;
 
-    Job.findOne({id: check.job}).then((job)=>{
+    Job.findOne({ id: check.job }).then((job) => {
         let promises = [];
         let now = new Date();
 
@@ -39,7 +39,7 @@ function OnCheckCommand(event){
             job.downtime = 0;
         }
 
-        if(check.isResponsive) {
+        if (check.isResponsive) {
             job.notResponsiveCount = 0;
         } else {
             job.notResponsiveCount++;
@@ -78,7 +78,7 @@ function OnCheckCommand(event){
 
         promises.push(job.save());
 
-        return Promise.all(promises).then(()=>{
+        return Promise.all(promises).then(() => {
             logger.info('job updated...');
         });
 
