@@ -12,7 +12,7 @@ let schema = {
             type: 'text',
             primaryKey: true,
             unique: true,
-            defaultsTo: function() {
+            defaultsTo: function () {
                 return BaseModel.uuid();
             }
         },
@@ -28,7 +28,7 @@ let schema = {
         label: 'string',
         description: 'string',
     },
-    purge: function(maxAge=MAX_AGE_3_MONTHS) {
+    purge: function (maxAge = MAX_AGE_3_MONTHS) {
         const oldestDateToKeep = new Date(Date.now() - maxAge);
         return this.destroy({
             createdAt: {
