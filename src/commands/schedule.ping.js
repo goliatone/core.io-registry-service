@@ -17,34 +17,45 @@ function SchedulePingCommand(event) {
     let check = Check.start(record);
 
     command.call(context, event).then((response) => {
-        logger.info('response %s count %s', response.statusCode, count);
+        logger.info('-> response %s count %s', response.statusCode, count);
         check.statusCode = response.statusCode;
-        return Check.commit(null, check).then(([check])=>{
-            context.influx.writePoints([
-                {
-                  measurement: 'probe',
-                  tags: { 
-                      status: check.statusCode, 
-                      up: check.isUp,
-                      responsive: check.isResponsive,
-                      job: check.job
-                  },
-                  fields: { response: check.responseTime },
-                  timestamp: check.requestTime
-                }
-              ]).catch(err => {
-                console.error(`Error saving data to InfluxDB! ${err.stack}`);
-              });
-        });
+        return Check.commit(null, check);
     }).catch((err) => {
         return Check.commitKo(err, check);
-    }).then(logger.info);
+    }).then((check) => {
+            
+        logger.info('Check.commit().then: %j', check);
+
+        let point = {
+            measurement: 'probe',
+            tags: {
+                status: check.statusCode,
+                up: check.isUp ? 1 : 0,
+                responsive: check.isResponsive ? 1 : 0,
+                job: check.job
+            },
+            fields: { 
+                duration: check.responseTime,
+                // ok: check.isUp ? 1 : 0,
+                // res: check.isResponsive ? 1 : 0,
+            },
+            timestamp: check.requestTime
+        };
+
+        logger.info('Create influx point: %j', point);
+
+        context.influx.writePoints([
+            point
+        ]).catch(err => {
+            console.error(`Error saving data to InfluxDB! ${err.stack}`);
+        });
+    });
 }
 
 module.exports = SchedulePingCommand;
 
 
-function getTypeFromEndpoint(uri='') {
+function getTypeFromEndpoint(uri = '') {
     return uri.split('://')[0];
 }
 
