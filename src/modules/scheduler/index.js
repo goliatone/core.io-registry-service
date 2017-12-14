@@ -14,11 +14,9 @@ const Scheduler = require('./lib/scheduler');
  * @param  {Object} config  Config object
  * @return {void}
  */
-module.exports.init = function(context, config){
+module.exports.init = function (context, config) {
 
-    if(!config.logger){
-        config.logger = context.getLogger('scheduler');
-    }
+    config.logger = context.getLogger('scheduler');
 
     let scheduler = new Scheduler(config);
 
