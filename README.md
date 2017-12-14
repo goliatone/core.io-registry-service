@@ -51,10 +51,15 @@ A sample registration payload:
 
 After a new application instance is created a default job is assigned to it.
 
+If you specify an attribute `identifier` it will be used to match the application and ensure there's a single job running. 
+If not provided it will create an identifier using `appId`@`hostname`. E.g. **mya-app@goliatodromo.local**.
 
 ##### unregister
 
+#### Application Identifiers
+
 #### Application vs Session
+
 
 #### Jobs
 
@@ -73,7 +78,10 @@ Application - has-many -* Instance
 https://www.npmjs.com/package/electron-mac-notifier
 
 
-## Docker 
+
+## Development 
+
+### Docker 
 
 ### Redis 
 
@@ -92,11 +100,18 @@ docker run --rm --link=redis -it redis redis -host redis
 ```
 
 
-### InfluxDB
+#### InfluxDB
 
 Read more about InfluxDB docker image [here](https://hub.docker.com/_/influxdb/).
 Read about the Node.js client [here](https://node-influx.github.io/).
 Read InfluxDB documentation [here](https://docs.influxdata.com/influxdb/v1.3/introduction/getting_started/).
+
+To get a get a new configuration file
+
+```
+docker run --rm influxdb influxd config > influxdb.conf
+```
+
 Development: 
 
 ```
