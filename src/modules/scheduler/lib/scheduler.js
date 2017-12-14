@@ -12,22 +12,24 @@ const DEFAULTS = require('./defaults');
  * @constructor
  */
 class Scheduler extends EventEmitter {
-    constructor(config){
+    constructor(config) {
         super();
         config = extend({}, DEFAULTS, config);
-        if(config.autoinitialize){
+        if (config.autoinitialize) {
             this.init(config);
         }
     }
 
-    init(config={}){
+    init(config = {}) {
         extend(this, config);
         let Strategy = this.strategyMap[this.strategy];
 
         /*
          * Create a logger for a given strategy.
          */
-        this.options.logger = this.logger.getLogger(this.strategy);
+        if(this.logger.getLogger) {
+            this.options.logger = this.logger.getLogger(this.strategy);
+        }
 
         this.strategy = new Strategy(this.options);
     }
@@ -36,20 +38,20 @@ class Scheduler extends EventEmitter {
         this.logger.info('Scheduler.schedule(%j)', options);
         let handler = options.handler;
 
-        options.handler = (err, event)=> {
-            if(handler) handler(err, event);
+        options.handler = (err, event) => {
+            if (handler) handler(err, event);
             this.tick(event);
         };
 
         return this.strategy.schedule(options);
     }
 
-    tick(event={}){
+    tick(event = {}) {
         event = this.buildEvent(event);
         this.emit('schedule.event', event);
     }
 
-    buildEvent(event={}){
+    buildEvent(event = {}) {
         // event.scheduler = this;
         return event;
     }
