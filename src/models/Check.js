@@ -64,7 +64,7 @@ let schema = {
             timeoutAfter: record.timeoutAfter
         };
     },
-    commit: function (err, record) {
+    commit: function (err, record, codeThreshold=500) {
         if (err) return this.commitKo(err, record);
 
         /*
@@ -74,9 +74,11 @@ let schema = {
          * if it has to fail on bogus
          * status codes.
          */
-        if (record.statusCode && record.statusCode >= 400) {
+        if (record.statusCode && record.statusCode >= codeThreshold) {
             return this.commitKo(new Error('Invalid response type'), record);
         }
+
+        if(!record.statusCode) record.statusCode = 0;
 
         return this.commitOk(record);
     },
