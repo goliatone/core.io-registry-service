@@ -82,10 +82,20 @@ let schema = {
             online: true
         };
 
+        /**
+         * values.appId
+         * values.hostname
+         * values.identifier
+         * values.environment
+         */
         attrs.forEach((attr) => {
             values[attr] = payload[attr];
         });
 
+        /**
+         * Everything else we store as data:
+         * values.data -> ...attrs
+         */
         Object.keys(payload).forEach((key) => {
             if (attrs.includes(key)) return;
 
@@ -97,13 +107,16 @@ let schema = {
 
         let criteria = {};
 
-        if (values.identifier) {
-            criteria.identifier = payload.identifier;
-        } else {
-            values.identifier =
-                criteria.identifier = payload.appId + '@' + payload.hostname;
+        if (!values.identifier) {
+            values.identifier = values.appId + '@' + values.hostname;
         }
 
+        criteria.identifier = values.identifier;
+
+        console.log('---------------------');
+        console.log('Application.updateOrCreate(%j)', criteria);
+        console.log('---------------------');
+        
         return this.updateOrCreate(criteria, values).then((record) => {
             /**
              * If the application specified a health 
