@@ -33,6 +33,16 @@ function JobCreatedCommand(event){
         logger.warn('Job Scheduled!!! will fire in %s', interval);
     });
 
+    if(!context.scheduler._d) {
+        context.scheduler._d = {};
+    }
+
+    if(context.scheduler._d[record.id]) {
+        return;
+    }
+    
+    context.scheduler._d[record.id] = true;
+
     context.scheduler.on('schedule.event', (e) => {
         logger.info('schedule.event => schedule.ping', e);
         context.emit('schedule.ping', {
