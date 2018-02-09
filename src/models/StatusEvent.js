@@ -26,9 +26,9 @@ let schema = {
             type: 'integer'
         },
         label: 'string',
-        description: 'string',
+        description: 'string'
     },
-    purge: function(maxAge=MAX_AGE_3_MONTHS) {
+    purge: function(maxAge = MAX_AGE_3_MONTHS) {
         const oldestDateToKeep = new Date(Date.now() - maxAge);
         return this.destroy({
             createdAt: {

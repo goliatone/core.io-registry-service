@@ -1,6 +1,5 @@
 'use strict';
 
-
 module.exports = {
     logger: console,
     autoinitialize: true,
@@ -8,7 +7,7 @@ module.exports = {
     interval: 10000,
     strategyMap: {
         redis: require('./redis'),
-        native: require('./native'),
+        native: require('./native')
     },
     options: {}
 };

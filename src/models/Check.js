@@ -84,7 +84,8 @@ let schema = {
         record.isUp = false;
         record.responseTime = Date.now() - record.requestTime;
         record.isResponsive = false;
-        record.error = err.toString();
+        record.error = (err || '').toString();
+        console.log('commitKo');
         return this.create(record);
     },
     commitOk: function (record) {
@@ -95,7 +96,7 @@ let schema = {
         if (record.timeoutAfter) {
             record.isResponsive = record.responseTime < record.timeoutAfter;
         }
-
+        console.log('commitOk');
         return this.create(record);
     },
     purge: function (maxAge = MAX_AGE_3_MONTHS) {
