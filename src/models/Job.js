@@ -82,7 +82,6 @@ let schema = {
             type: 'date'
         },
 
-
         endpoint: 'string',
         name: 'string',
         description: 'string',
@@ -146,6 +145,7 @@ let schema = {
         }
     },
     createDefaultFor: function (id, options) {
+        
         if (typeof options === 'string') {
             options = {
                 url: options
@@ -155,11 +155,19 @@ let schema = {
         if (!options.interval) {
             options.interval = (0.5 * 60 * 1000);
         }
-
-        return this.create({
+        
+        console.log('createDefaultFor(%j)', {
             application: id,
             interval: options.interval,
-            endpoint: options.url
+            endpoint: options.url || options.endpoint
+        });
+
+        //TODO: we might want to do endpoint unique
+        return this.findOrCreate({
+            application: id,
+            interval: options.interval,
+            //TODO: Ensure we use endpoint instead of URL
+            endpoint: options.url || options.endpoint
         });
     }
 };
