@@ -4,13 +4,12 @@ const EventEmitter = require('events');
 const redis = require('redis');
 const extend = require('gextend');
 
-
 const DEFAULTS = {
     logger: console,
     host: 'localhost',
     port: 6579,
     db: 0,
-    autostart: true,
+    autostart: false,
     timeout: 10 * 1000 //Timeout after 10 seconds
 };
 
@@ -25,7 +24,6 @@ const DEFAULTS = {
  * @type {[type]}
  */
 class Scheduler extends EventEmitter {
-
     /**
      * Create a new Scheduler.
      *
@@ -40,7 +38,7 @@ class Scheduler extends EventEmitter {
      * @param  {Object} [options={}]
      * @return {this}
      */
-    constructor(options={}){
+    constructor(options = {}) {
         super();
 
         options = extend({}, DEFAULTS, options);
@@ -58,12 +56,12 @@ class Scheduler extends EventEmitter {
 
         this.options = options;
 
-        if(options.autostart) {
+        if (options.autostart) {
             this.start(options);
         }
     }
 
-    start(options){
+    start(options) {
         options = extend({}, this.options, options);
 
         this.timeout = options.timeout;
@@ -80,12 +78,12 @@ class Scheduler extends EventEmitter {
          * if we fail to connect in less than
          * `timeout` the promise will be rejected.
          */
-        return new Promise((resolve, reject)=>{
-            this._initTimeout = setTimeout(()=> {
+        return new Promise((resolve, reject) => {
+            this._initTimeout = setTimeout(() => {
                 reject(new Error('Timeout'));
             }, this.timeout);
 
-            this.clients.listener.once('ready', ()=>{
+            this.clients.listener.once('ready', () => {
                 clearTimeout(this._initTimeout);
                 //TODO: we should ensureNotifyKeyspaceEventSet is set
                 //before we resolve this :)
@@ -97,21 +95,33 @@ class Scheduler extends EventEmitter {
         });
     }
 
+    /** 
+     * Check that our redis instance is configured
+     * properly, that is `notify-keyspace-event`
+     * MUST be set to **Ex**.  
+     */
     ensureNotifyKeyspaceEventSet() {
         return new Promise((resolve, reject) => {
-            // notify-keyspace-event
+            
             this.clients.scheduler.CONFIG('GET', 'notify*', (err, value) => {
-                if(err){
+                if (err) {
                     this.logger.info('notify-keyspace-event error:', err);
                     return reject(err);
                 }
 
-                if(!value || Array.isArray(value) && value.length === 0){
+                if (!value || (Array.isArray(value) && value.length < 2)) {
                     this.logger.info('notify-keyspace-event NOT set', value);
-                    return reject();
+                    return reject(new Error('Invalid configuration: notify-keyspace-event NOT set'));
                 }
 
-                this.logger.info('notify-keyspace-event is set', value);
+                let [_, chars] = value;
+                if(!chars.includes('E') || !chars.includes('x')) {
+                    this.logger.info('notify-keyspace-event NOT configured, need "Ex", have %s', chars);
+                    return reject(new Error('Invalid configuration: notify-keyspace-event NOT set'));
+                }
+
+                this.logger.info('notify-keyspace-event is set: "%s"', chars);
+
                 resolve();
             });
         });
@@ -188,8 +198,8 @@ class Scheduler extends EventEmitter {
     schedule(options) {
         const task = this._addTask(options);
         this.logger.info('-> schedule(%j)', options);
-        return new Promise((resolve, reject)=>{
 
+        return new Promise((resolve, reject) => {
             /*
              * If we are only adding a handler
              * then this would make sense.
@@ -197,23 +207,22 @@ class Scheduler extends EventEmitter {
              * expire or handler then it
              * does not make any sense at all
              */
-            if(!task.expire) {
-                if(!task.isExecutable) {
+            if (!task.expire) {
+                if (!task.isExecutable) {
                     this.logger.warn('This call to schedule had no effect!');
                 }
                 return resolve(task);
             }
 
-            const {scheduler} = this.clients;
+            const { scheduler } = this.clients;
 
-            if(!scheduler) return reject(new Error('Not initialized'));
-
+            if (!scheduler) return reject(new Error('Not initialized'));
 
             const millis = task.millis;
             const _responder = this._promisifyCallback(task, reject, resolve);
 
             scheduler.exists(task.key, (err, exists) => {
-                if(err) return reject(err);
+                if (err) return reject(err);
 
                 if (exists) {
                     this.logger.info('register using pexpire');
@@ -225,16 +234,16 @@ class Scheduler extends EventEmitter {
                     scheduler.pexpire(task.key, millis, _responder);
                 } else {
                     this.logger.info('register using set');
-                    scheduler.set(task.key, '', 'PX', millis, _responder);
+                    scheduler.set(task.key, task.serialize(), 'PX', millis, _responder);
                 }
             });
         });
     }
 
     _addTask(options) {
-
         let task;
-        if(options.id) {
+        if (options.id) {
+            console.log('_addTask: id = %s', options.id);
             task = this._tasks.get(options.id);
             return task;
         } else {
@@ -242,7 +251,7 @@ class Scheduler extends EventEmitter {
             this._tasks.set(task.id, task);
         }
 
-        if(!this._schedules.has(task.key)){
+        if (!this._schedules.has(task.key)) {
             this._schedules.set(task.key, []);
         }
 
@@ -252,7 +261,7 @@ class Scheduler extends EventEmitter {
         return task;
     }
 
-    _removeTask(task){
+    _removeTask(task) {
         this._tasks.delete(task.id);
 
         let tasks = this._schedules.get(task.key);
@@ -261,17 +270,17 @@ class Scheduler extends EventEmitter {
             l = tasks.length,
             t;
 
-        for(; i < l; i++){
+        for (; i < l; i++) {
             t = tasks[i];
-            if(t && t.id === task.id){
+            if (t && t.id === task.id) {
                 tasks.splice(i, 1);
             }
         }
     }
 
-    _promisifyCallback(task, reject, resolve){
+    _promisifyCallback(task, reject, resolve) {
         return function _promiseCallback(err, res) {
-            if(err) reject(err);
+            if (err) reject(err);
             else resolve(task);
         };
     }
@@ -284,10 +293,10 @@ class Scheduler extends EventEmitter {
      * @return {Promise}
      */
     cancel(key) {
-        return new Promise((resolve, reject)=>{
-            this.clients.scheduler.del(key, (err)=>{
+        return new Promise((resolve, reject) => {
+            this.clients.scheduler.del(key, err => {
                 this._schedules.set(key, []);
-                if(err) reject(err);
+                if (err) reject(err);
                 else resolve();
             });
         });
@@ -312,7 +321,7 @@ class Scheduler extends EventEmitter {
 
         let tasks = this._schedules.get(key);
 
-        if(!tasks) {
+        if (!tasks) {
             return this.logger.warn('expired event %s has no tasks', key);
         }
 
@@ -321,14 +330,14 @@ class Scheduler extends EventEmitter {
         this.logger.warn('key: %s', key);
         this.logger.warn('time: %s', time);
 
-        tasks.forEach((task) => {
-            if(task.matches(key)) {
+        tasks.forEach(task => {
+            if (task.matches(key)) {
                 this.logger.warn('run task %s for %s', task.type, key);
 
                 task.run();
 
-                if(task.needsReschedule) {
-                    this.reschedule({id: task.id});
+                if (task.needsReschedule) {
+                    this.reschedule({ id: task.id });
                 } else {
                     this._removeTask(task);
                 }
@@ -339,38 +348,38 @@ class Scheduler extends EventEmitter {
     _setRedisEvents() {
         this._cleanup();
 
-        const {listener, scheduler} = this.clients;
+        const { listener, scheduler } = this.clients;
 
-        listener.on('ready', ()=>{
+        listener.on('ready', () => {
             this.logger.log('ready');
             this.emit('ready', 'listener');
         });
 
-        listener.on('connect', ()=>{
+        listener.on('connect', () => {
             this.emit('connect', 'listener');
         });
 
-        listener.on('drain', ()=>{
+        listener.on('drain', () => {
             this.emit('drain', 'listener');
         });
 
-        listener.on('idle', ()=>{
+        listener.on('idle', () => {
             this.emit('idle', 'listener');
         });
 
-        scheduler.on('ready', ()=>{
+        scheduler.on('ready', () => {
             this.emit('ready', 'scheduler');
         });
 
-        scheduler.on('connect', ()=>{
+        scheduler.on('connect', () => {
             this.emit('connect', 'scheduler');
         });
 
-        scheduler.on('drain', ()=>{
+        scheduler.on('drain', () => {
             this.emit('drain', 'scheduler');
         });
 
-        scheduler.on('idle', ()=>{
+        scheduler.on('idle', () => {
             this.emit('idle', 'scheduler');
         });
 
@@ -379,7 +388,7 @@ class Scheduler extends EventEmitter {
          * Just route it
          */
         listener.on('message', (channel, message) => {
-            this.logger.info('-------')
+            this.logger.info('-------');
             this.logger.info('message', channel, message);
             this._handleExpireEvent(message);
         });
@@ -388,25 +397,23 @@ class Scheduler extends EventEmitter {
     }
 
     _cleanup() {
-      this.clients.listener.removeAllListeners();
-      this.clients.scheduler.removeAllListeners();
+        this.clients.listener.removeAllListeners();
+        this.clients.scheduler.removeAllListeners();
 
-      this.clients.listener.unsubscribe(`__keyevent@${this.db}__:expired`);
-      this._tasks = new Map();
-      this._schedules = new Map();
+        this.clients.listener.unsubscribe(`__keyevent@${this.db}__:expired`);
+        this._tasks = new Map();
+        this._schedules = new Map();
     }
-
 }
-
 
 module.exports = Scheduler;
 
-function createRedisClient(options={}) {
+function createRedisClient(options = {}) {
     let client;
 
     let {
-        host='localhost',
-        port=6379,
+        host = 'localhost',
+        port = 6379,
         path,
         db,
         password,
@@ -444,7 +451,7 @@ class Task {
     }
 
     init(options) {
-        if(!options.id) {
+        if (!options.id) {
             options.id = uuid();
         }
 
@@ -460,63 +467,88 @@ class Task {
 
         this.runs = 0;
 
-        if(options.pattern) {
+        if (options.pattern) {
             this.pattern = new RegExp(this.key);
         }
 
-        if(typeof this.reschedule === 'number') {
+        if (typeof this.reschedule === 'number') {
             this.repeat = this.reschedule;
             this.reschedule = true;
         }
     }
 
-    matches(key){
-        if(this.pattern) {
+    fromJSON(data) {
+        extend(this, data);
+    }
+
+    toJSON() {
+        return {
+            id: this.id,
+            key: this.key,
+            data: this.data,
+            runs: this.runs,
+            repeat: this.repeat,
+            pattern: this.pattern,
+            reschedule: this.reschedule
+        };
+    }
+    serialize(){
+        let out = this.toJSON();
+        return JSON.stringify(out);
+    }
+
+    deserialize(data) {
+        let json = JSON.parse(data);
+        this.fromJSON(json);
+    }
+
+
+    matches(key) {
+        if (this.pattern) {
             return this.pattern.test(key);
         }
         return this.key === key;
     }
 
-    run(err){
-        if(this.runExceeded) {
+    run(err) {
+        if (this.runExceeded) {
             return;
         }
 
         this.runs++;
 
-        if(this.isExecutable) {
+        if (this.isExecutable) {
             this.handler(err, this);
         }
     }
 
-    get type(){
+    get type() {
         return this._type;
     }
 
-    set type(v){}
+    set type(v) {}
 
-    get runExceeded(){
-        if(this.repeat && this.repeat === this.runs){
+    get runExceeded() {
+        if (this.repeat && this.repeat === this.runs) {
             return true;
         }
         return false;
     }
 
-    get needsReschedule(){
-        if(this.repeat) {
+    get needsReschedule() {
+        if (this.repeat) {
             return !this.runExceeded;
         }
         return this.reschedule;
     }
 
-    get isExecutable(){
+    get isExecutable() {
         return typeof this.handler === 'function';
     }
 
-    get millis(){
+    get millis() {
         if (this.expire instanceof Date) {
-            const now = new Date().getTime();
-            this.expire = this.expire.getTime() - now;
+            this.expire = this.expire.getTime() - Date.now();
         }
 
         return this.expire;
