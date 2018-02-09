@@ -3,7 +3,7 @@
 const EventEmitter = require('events');
 
 class NativeScheduler {
-    constructor(options){
+    constructor(options) {
         this.options = options;
     }
 
@@ -14,17 +14,11 @@ class NativeScheduler {
      *
      * @return {Promise} Promise resolved on completions
      */
-    boot() {
+    start() {
         return Promise.resolve();
     }
 
-    start() {
-        this.intervalId = setInterval(()=>{
-            this.tick();
-        }, this.interval);
-    }
-
-    stop(){
+    stop() {
         clearInterval(this.intervalId);
     }
 }
