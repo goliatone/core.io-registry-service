@@ -19,7 +19,7 @@ module.exports = function (router, config, subapp) {
 
     initialize(subapp, config);
 
-    router.use('/', subapp);
+    // router.use('/', subapp);
 };
 
 function initialize(router, config) {
@@ -130,6 +130,23 @@ function initialize(router, config) {
 
     router.get('/job/:id/checks', function jobCheckHandler(req, res, next) {
         Check.find({ job: req.params.id }).then((result) => {
+            res.send({
+                success: true,
+                value: result
+            });
+        });
+    });
+
+    router.get('/check', function jobCheckCountHandler(req, res, next) {
+        Check.find().then((result) => {
+            res.send({
+                success: true,
+                value: result
+            });
+        });
+    });
+    router.get('/check/count', function jobCheckCountHandler(req, res, next) {
+        Check.count().then((result) => {
             res.send({
                 success: true,
                 value: result

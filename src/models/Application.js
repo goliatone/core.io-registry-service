@@ -101,9 +101,13 @@ let schema = {
             criteria.identifier = payload.identifier;
         } else {
             values.identifier =
-                criteria.identifier = payload.appId + '@' + payload.hostname;
+            criteria.identifier = payload.appId + '@' + payload.hostname;
         }
 
+        /**
+         * We migth have an application online already... 
+         * so we just want to update.
+         */
         return this.updateOrCreate(criteria, values).then((record) => {
             /**
              * If the application specified a health 
