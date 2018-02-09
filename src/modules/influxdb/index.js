@@ -8,6 +8,8 @@ module.exports.init = function(context, config) {
     let {host, database} = config.connection;
 
     const logger = context.getLogger('influx');
+    
+    return {};
 
     const influx = new Influx.InfluxDB({
         host,

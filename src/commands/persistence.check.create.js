@@ -6,11 +6,11 @@
  */
 function OnCheckCommand(event) {
     const context = event.context;
-    const logger = context.getLogger('check-cmd');
-
-    logger.info('check command on %s', event.action);
+    const logger = context.getLogger('per.check.crt');
 
     let check = event.record;
+
+    logger.info('check command on "%s": %s', event.action, event.id);
 
     const Job = context.models.Job;
     const StatusEvent = context.models.StatusEvent;
@@ -79,7 +79,7 @@ function OnCheckCommand(event) {
         promises.push(job.save());
 
         return Promise.all(promises).then(() => {
-            logger.info('job updated...');
+            logger.info('job updated...', event.id);
         });
 
     }).catch(logger.error);
