@@ -159,6 +159,9 @@ probe,job=83da337f-e8cf-4ffc-b1b0-e3fe2237e0d2,status=1,responsive=1,up=1 respon
 
 
 <!--
+https://github.com/iloire/watchmen
+https://github.com/statusdashboard/statusdashboard
+https://demo.cachethq.io/
 https://github.com/Bertrand31/Monitaure
 https://github.com/stefanbc/uptimey
 https://github.com/qawemlilo/node-monitor
