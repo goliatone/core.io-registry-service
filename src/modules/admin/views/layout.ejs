@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Janus | Dashboard</title>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="/favicon.ico">
+    <!-- Latest compiled and minified CSS -->
+
+    <!-- Latest compiled and minified CSS -->
+
+    <%- style %>
+  </head>
+<body id="content-page">
+
+
+    <!-- Log Page -->
+    <main class="container">
+        <%- body %>
+    </main>
+
+    <div class="container footer">
+    </div>
+
+</body>
+    <script>
+        /*
+         * We need to set variables rendered via
+         * ejs before we run any script.
+         */
+        window.LOCALS = {
+            token: '<%= locals.token %>',
+            meta: '<%= locals.meta %>',
+            count: '<%= locals.count %>',//list
+            <% if(locals.criteria){%>
+            criteria: <%- JSON.stringify(locals.criteria) %>,//list
+            <%}%>
+            method: '<%= locals.method %>',
+            formAction: '<%= locals.action %>',
+            crudAction: '<%= locals.crudAction %>',
+            entityName: '<%= locals.entityName %>'
+        };
+
+        /*
+         * @TODO: deprecate...
+         */
+        window.TOKEN = '<%= locals.token %>';
+        window.crudAction = '<%= locals.crudAction %>';
+
+    </script>
+    <!-- SCRIPTS -->
+    <%- script %>
+    <!-- SCRIPTS -->
+</html>

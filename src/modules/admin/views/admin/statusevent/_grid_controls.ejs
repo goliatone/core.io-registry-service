@@ -1,0 +1,66 @@
+<!-- table controls-->
+<div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-6">
+        <div class="form-group">
+            <div class="js-search input-group">
+                <span class="input-group-btn">
+                    <button class="js-search-btn btn btn-default">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </button>
+                </span>
+                <input name="search-input" class="form-control" type="search" placeholder="Filter by Keyword">
+                <span class="input-group-btn">
+                    <div class="select-wrapper form-control">
+                        <select class="js-search-filters btn-select" width="80">
+                        <option>Filters</option>
+                        <option>Filter1</option>
+                        <option>Filter2</option>
+                        </select><span class="caret"></span>
+                    </div>
+                </span> 
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-6">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-sm-2 control-label">Limit</label>
+                <div class="col-sm-2 col-md-2">
+                    <select class="form-control" name="pagination-limit" data-def="10">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="30">30</option>
+                        <option value="40">40</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xs-12 col-sm-6 col-md-6">
+        <nav aria-label="pagination">
+            <ul class="pagination  pull-right">
+                <li class="<%= pagination.hasPrevPage() ? '' : 'disabled' %>">
+                        <a href="<%= pagination.prev() %>">Previous
+                    </a>
+                </li>
+
+                <% pagination.getPages().forEach((page)=> { %>
+                    <li class="<%= page.active ? 'active' : '' %>">
+                        <a href="<%= page.link %>">
+                            <%= page.index %>
+                        </a>
+                    </li>
+                <% }) %>
+
+                <li class="<%= pagination.hasNextPage() ? '' : 'disabled' %>">
+                    <a href="<%= pagination.next() %>">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>

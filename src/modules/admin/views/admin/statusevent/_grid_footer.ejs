@@ -1,0 +1,30 @@
+<div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-6">
+        <p>Showing <span><%= pagination.startItemIndex %></span>
+            to <span><%= pagination.endItemIndex + records.length %></span>
+            of <span><%= pagination.totalItems %></span> entries</p>
+    </div>
+
+    <div class="col-xs-12 col-sm-6 col-md-6">
+        <nav aria-label="pagination">
+            <ul class="pagination  pull-right">
+                <li class="<%= pagination.hasPrevPage() ? '' : 'disabled' %>">
+                        <a href="<%= pagination.prev() %>">Previous
+                    </a>
+                </li>
+
+                <% pagination.getPages().forEach((page) => { %>
+                    <li class="<%= page.active ? 'active' : '' %>">
+                        <a href="<%= page.link %>">
+                            <%= page.index %>
+                        </a>
+                    </li>
+                <% }) %>
+
+                <li class="<%= pagination.hasNextPage() ? '' : 'disabled' %>">
+                    <a href="<%= pagination.next() %>"> Next </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
